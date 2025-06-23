@@ -1,0 +1,90 @@
+USE banco_cl;
+
+CREATE TABLE Clientes(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    documento INT NOT NULL,
+    correo VARCHAR(100) NOT NULL,
+    fecha_registro DATE NOT NULL DEFAULT (CURRENT_DATE),
+    telefono INT(14) NOT NULL,
+    UNIQUE (documento)
+);
+
+CREATE TABLE Tipo_cuentas(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombre ENUM('Ahorro', 'Corriente') NOT NULL
+);
+
+CREATE TABLE Cuentas(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tipo_cuenta_id INT NOT NULL,
+    cliente_id INT NOT NULL,
+    saldo DECIMAL(12, 2) NOT NULL,
+    fecha_creacion DATE NOT NULL,
+    FOREIGN KEY (cliente_id) REFERENCES Clientes(id) ON DELETE CASCADE,
+    FOREIGN KEY (tipo_cuenta_id) REFERENCES Tipo_cuentas(id)
+);
+
+CREATE TABLE Categoria_tarjetas(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombre ENUM('Credito', 'Debito') NOT NULL
+);
+
+CREATE TABLE Tipo_tarjetas(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombre ENUM('Joven', 'Nomina', 'Visa') NOT NULL,
+    descuento DECIMAL(5, 2) NOT NULL
+);
+
+CREATE TABLE Tarjetas(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tipo_tarjeta_id INT NOT NULL,
+    categoria_tarjeta_id INT NOT NULL,
+    cuenta_id INT NOT NULL,
+    monto_apertura DECIMAL(10, 2) NOT NULL,
+    saldo DECIMAL(10, 2) NOT NULL,
+    estado ENUM('Activa', 'Inactiva', 'Bloqueada', 'Vencida') NOT NULL,
+    numero_tarjeta VARCHAR(50) NOT NULL,
+    fecha_expiracion DATE NOT NULL,
+    limite_credito DECIMAL(10, 2) NULL,
+    FOREIGN KEY (cuenta_id) REFERENCES Cuentas(id) ON DELETE CASCADE,
+    FOREIGN KEY (tipo_tarjeta_id) REFERENCES Tipo_tarjetas(id),
+    FOREIGN KEY (categoria_tarjeta_id) REFERENCES Categoria_tarjetas(id)
+);
+
+CREATE TABLE Cuotas_de_manejo(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tarjeta_id INT NOT NULL,
+    monto_base DECIMAL(10, 2) NOT NULL,
+    monto_total DECIMAL(10, 2) NOT NULL,
+    vencimiento_cuota DATE NOT NULL,
+    estado ENUM('Pago', 'Pendiente') NOT NULL,
+    FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Pagos(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    cuota_id INT NOT NULL,
+    fecha_pago DATE NOT NULL,
+    total_pago DECIMAL(10, 2) NOT NULL,
+    metodo_pago VARCHAR(50) NOT NULL,
+    estado ENUM('Completado', 'Rechazado', 'pendiente', 'Cancelado') NOT NULL,
+    FOREIGN KEY (cuota_id) REFERENCES Cuotas_de_manejo(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Historial_de_pagos(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    pago_id INT NOT NULL,
+    fecha_cambio DATE NOT NULL,
+    estado_anterior ENUM('Completado', 'Rechazado', 'pendiente', 'Cancelado') NOT NULL,
+    nuevo_estado ENUM('Completado', 'Rechazado', 'pendiente', 'Cancelado') NOT NULL,
+    FOREIGN KEY (pago_id) REFERENCES Pagos(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Seguridad_tarjetas(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tarjeta_id INT NOT NULL,
+    pin INT NOT NULL,
+    fecha_creacion DATE NOT NULL,
+    FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE
+);
