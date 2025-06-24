@@ -68,7 +68,7 @@ CREATE TABLE Pagos(
     fecha_pago DATE NOT NULL,
     total_pago DECIMAL(10, 2) NOT NULL,
     metodo_pago VARCHAR(50) NOT NULL,
-    estado ENUM('Completado', 'Rechazado', 'pendiente', 'Cancelado') NOT NULL,
+    estado ENUM('Completado', 'Rechazado', 'Pendiente', 'Cancelado') NOT NULL,
     FOREIGN KEY (cuota_id) REFERENCES Cuotas_de_manejo(id) ON DELETE CASCADE
 );
 
@@ -76,8 +76,8 @@ CREATE TABLE Historial_de_pagos(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     pago_id INT NOT NULL,
     fecha_cambio DATE NOT NULL,
-    estado_anterior ENUM('Completado', 'Rechazado', 'pendiente', 'Cancelado') NOT NULL,
-    nuevo_estado ENUM('Completado', 'Rechazado', 'pendiente', 'Cancelado') NOT NULL,
+    estado_anterior ENUM('Completado', 'Rechazado', 'Pendiente', 'Cancelado') NOT NULL,
+    nuevo_estado ENUM('Completado', 'Rechazado', 'Pendiente', 'Cancelado') NOT NULL,
     FOREIGN KEY (pago_id) REFERENCES Pagos(id) ON DELETE CASCADE
 );
 
@@ -87,4 +87,52 @@ CREATE TABLE Seguridad_tarjetas(
     pin INT NOT NULL,
     fecha_creacion DATE NOT NULL,
     FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Movimientos(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    cuenta_id INT NOT NULL,
+    monto DECIMAL(10,2) NOT NULL,
+    fecha DATE NOT NULL DEFAULT(CURRENT_DATE),
+    saldo_anterior DECIMAL(10,2) NOT NULL,
+    nuevo_saldo DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (cuenta_id) REFERENCES Cuentas(id)
+);
+
+CREATE TABLE Movimientos_tarjeta (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tarjeta_id INT NOT NULL,
+    fecha DATE NOT NULL DEFAULT (CURRENT_DATE),
+    monto DECIMAL(10,2) NOT NULL,
+    tipo ENUM('Compra', 'Retiro') NOT NULL,
+    cuotas INT DEFAULT 1,
+    FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Cuotas_credito (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    movimiento_id INT NOT NULL,
+    numero_cuota INT NOT NULL,
+    fecha_vencimiento DATE NOT NULL,
+    valor_cuota DECIMAL(10,2) NOT NULL,
+    estado ENUM('Pendiente', 'Pagada', 'Deposito') DEFAULT 'Pendiente',
+    FOREIGN KEY (movimiento_id) REFERENCES Movimientos_tarjeta(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Intereses_tarjetas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tarjeta_id INT NOT NULL,
+    fecha_generacion DATE NOT NULL DEFAULT CURRENT_DATE,
+    monto_base DECIMAL(10,2) NOT NULL,
+    tasa DECIMAL(5,2) NOT NULL, 
+    monto_interes DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id)
+);
+
+CREATE TABLE Pagos_tarjeta (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cuota_credito_id INT NOT NULL,
+    fecha_pago DATE NOT NULL DEFAULT CURRENT_DATE,
+    monto DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (cuota_credito_id) REFERENCES Cuotas_credito(id)
 );

@@ -141,6 +141,8 @@ LIMIT 1;
 
 -- Generar un ranking de los 5 tipos de tarjeta con mayor monto total de apertura acumulado.
 
+
+
 -- Mostrar el promedio de saldo por estado de tarjeta (Activa, Vencida, Bloqueada, etc.).
 
 -- Listar las tarjetas que no han tenido ningún pago registrado.
