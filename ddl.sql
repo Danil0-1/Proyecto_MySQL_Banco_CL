@@ -89,25 +89,38 @@ CREATE TABLE Seguridad_tarjetas(
     FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE
 );
 
+CREATE TABLE Tipo_movimiento_cuenta(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombre ENUM('Deposito', 'Nomina', 'Retiro', 'Retiro tarjeta')
+);
+
 CREATE TABLE Movimientos(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     cuenta_id INT NOT NULL,
+    tipo_movimiento INT NOT NULL,
     monto DECIMAL(10,2) NOT NULL,
     fecha DATE NOT NULL DEFAULT(CURRENT_DATE),
     saldo_anterior DECIMAL(10,2) NOT NULL,
     nuevo_saldo DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (cuenta_id) REFERENCES Cuentas(id)
+    FOREIGN KEY (cuenta_id) REFERENCES Cuentas(id),
+    FOREIGN KEY (tipo_movimiento) REFERENCES
 );
 
 CREATE TABLE Movimientos_tarjeta (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    tipo_movimiento_tarjeta INT NOT NULL,
     tarjeta_id INT NOT NULL,
     fecha DATE NOT NULL DEFAULT (CURRENT_DATE),
     monto DECIMAL(10,2) NOT NULL,
-    tipo ENUM('Compra', 'Retiro') NOT NULL,
     cuotas INT DEFAULT 1,
-    FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE
+    FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE,
+    FOREIGN KEY (tipo_movimiento_tarjeta) REFERENCES 
 );
+
+CREATE TABLE Tipo_movimiento_tarjeta(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombre ENUM('Compra', 'Retiro', 'Devolucion') NOT NULL,
+)
 
 CREATE TABLE Cuotas_credito (
     id INT AUTO_INCREMENT PRIMARY KEY,
