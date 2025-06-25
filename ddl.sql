@@ -6,7 +6,7 @@ CREATE DATABASE banco_cl;
 CREATE TABLE Clientes(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    documento INT NOT NULL,
+    documento VARCHAR(100) NOT NULL,
     correo VARCHAR(100) NOT NULL,
     fecha_registro DATE NOT NULL DEFAULT (CURRENT_DATE),
     telefono VARCHAR(30) NOT NULL,
