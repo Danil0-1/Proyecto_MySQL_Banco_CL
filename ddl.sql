@@ -9,7 +9,7 @@ CREATE TABLE Clientes(
     documento INT NOT NULL,
     correo VARCHAR(100) NOT NULL,
     fecha_registro DATE NOT NULL DEFAULT (CURRENT_DATE),
-    telefono INT(14) NOT NULL,
+    telefono VARCHAR(30) NOT NULL,
     UNIQUE (documento)
 );
 
@@ -22,7 +22,7 @@ CREATE TABLE Cuentas(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     tipo_cuenta_id INT NOT NULL,
     cliente_id INT NOT NULL,
-    saldo DECIMAL(12, 2) NOT NULL,
+    saldo DECIMAL(10, 2) NOT NULL,
     fecha_creacion DATE NOT NULL,
     FOREIGN KEY (cliente_id) REFERENCES Clientes(id) ON DELETE CASCADE,
     FOREIGN KEY (tipo_cuenta_id) REFERENCES Tipo_cuentas(id)
@@ -87,8 +87,8 @@ CREATE TABLE Historial_de_pagos(
 CREATE TABLE Seguridad_tarjetas(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     tarjeta_id INT NOT NULL,
-    pin INT NOT NULL,
-    fecha_creacion DATE NOT NULL,
+    pin VARCHAR(50) NOT NULL,
+    fecha_creacion DATE NOT NULL DEFAULT (CURRENT_DATE),
     FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE
 );
 
