@@ -112,7 +112,7 @@ CREATE TABLE Movimientos(
 
 CREATE TABLE Tipo_movimiento_tarjeta(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    nombre ENUM('Compra', 'Retiro', 'Devolucion') NOT NULL
+    nombre ENUM('Compra', 'Retiro', 'Devolucion', 'Pago') NOT NULL
 );
 
 CREATE TABLE Movimientos_tarjeta (
