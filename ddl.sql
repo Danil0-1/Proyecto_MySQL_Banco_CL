@@ -1,4 +1,7 @@
 USE banco_cl;
+DROP DATABASE banco_cl;
+
+CREATE DATABASE banco_cl;
 
 CREATE TABLE Clientes(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -94,6 +97,7 @@ CREATE TABLE Tipo_movimiento_cuenta(
     nombre ENUM('Deposito', 'Nomina', 'Retiro', 'Retiro tarjeta')
 );
 
+
 CREATE TABLE Movimientos(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     cuenta_id INT NOT NULL,
@@ -103,7 +107,12 @@ CREATE TABLE Movimientos(
     saldo_anterior DECIMAL(10,2) NOT NULL,
     nuevo_saldo DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (cuenta_id) REFERENCES Cuentas(id),
-    FOREIGN KEY (tipo_movimiento) REFERENCES
+    FOREIGN KEY (tipo_movimiento) REFERENCES Tipo_movimiento_cuenta(id)
+);
+
+CREATE TABLE Tipo_movimiento_tarjeta(
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombre ENUM('Compra', 'Retiro', 'Devolucion') NOT NULL
 );
 
 CREATE TABLE Movimientos_tarjeta (
@@ -112,15 +121,10 @@ CREATE TABLE Movimientos_tarjeta (
     tarjeta_id INT NOT NULL,
     fecha DATE NOT NULL DEFAULT (CURRENT_DATE),
     monto DECIMAL(10,2) NOT NULL,
-    cuotas INT DEFAULT 1,
+    cuotas INT NOT NULL DEFAULT 1,
     FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE,
-    FOREIGN KEY (tipo_movimiento_tarjeta) REFERENCES 
+    FOREIGN KEY (tipo_movimiento_tarjeta) REFERENCES Tipo_movimiento_tarjeta(id)
 );
-
-CREATE TABLE Tipo_movimiento_tarjeta(
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    nombre ENUM('Compra', 'Retiro', 'Devolucion') NOT NULL,
-)
 
 CREATE TABLE Cuotas_credito (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -135,7 +139,7 @@ CREATE TABLE Cuotas_credito (
 CREATE TABLE Intereses_tarjetas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tarjeta_id INT NOT NULL,
-    fecha_generacion DATE NOT NULL DEFAULT CURRENT_DATE,
+    fecha_generacion DATE NOT NULL DEFAULT (CURRENT_DATE),
     monto_base DECIMAL(10,2) NOT NULL,
     tasa DECIMAL(5,2) NOT NULL, 
     monto_interes DECIMAL(10,2) NOT NULL,
@@ -145,7 +149,7 @@ CREATE TABLE Intereses_tarjetas (
 CREATE TABLE Pagos_tarjeta (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cuota_credito_id INT NOT NULL,
-    fecha_pago DATE NOT NULL DEFAULT CURRENT_DATE,
+    fecha_pago DATE NOT NULL DEFAULT (CURRENT_DATE),
     monto DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (cuota_credito_id) REFERENCES Cuotas_credito(id)
 );
