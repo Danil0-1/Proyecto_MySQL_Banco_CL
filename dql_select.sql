@@ -22,7 +22,7 @@ WHERE cl.id = 3;
 
 SELECT SUM(monto_total) AS total_pagado
 FROM Cuotas_de_manejo
-WHERE MONTH(vencimiento_cuota) = 5 AND YEAR(vencimiento_cuota) = 2025 AND estado = 'Pago';
+WHERE MONTH(vencimiento_cuota) = 4 AND YEAR(vencimiento_cuota) = 2025 AND estado = 'Pago';
 
 -- Consultar las cuotas de manejo de los clientes con descuento aplicado.
 
@@ -49,9 +49,9 @@ INNER JOIN Cuentas cu ON cl.id = cu.cliente_id
 INNER JOIN Tarjetas t ON cu.id = t.cuenta_id
 INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
 INNER JOIN Pagos p ON cm.id = p.cuota_id
-WHERE p.estado = 'Pendiente' AND p.fecha_pago >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+WHERE p.estado = 'Pendiente' AND cm.vencimiento_cuota >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH) AND cm.vencimiento_cuota < CURDATE();
 
--- Consultar las cuotas de manejo aplicadas a cada tipo de tarjeta en un período específico.
+-- Consultar las cuotas de manejo aplicadas a cada tipo de tarjeta.
 
 SELECT tt.id, tt.nombre, MAX(cm.monto_base) AS monto_base, MAX(cm.monto_total) AS monto_descuento
 FROM Cuotas_de_manejo cm
@@ -110,7 +110,7 @@ SELECT id, vencimiento_cuota, monto_total, estado
 FROM Cuotas_de_manejo
 WHERE vencimiento_cuota < CURDATE() AND estado = 'Pendiente';
 
--- Consultar el total recaudado por pagos completados por cada método de pago (PSE, Tarjeta, etc.).
+-- Consultar el total recaudado por pagos completados por cada método de pago.
 
 SELECT metodo_pago, SUM(total_pago) AS Total
 FROM Pagos
@@ -134,17 +134,34 @@ INNER JOIN Cuentas cu ON cl.id = cu.cliente_id
 INNER JOIN Tarjetas t ON cu.id = t.cuenta_id
 INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
 INNER JOIN Pagos p ON cm.id = p.cuota_id
-WHERE YEAR(p.fecha_pago) = 2024
+WHERE YEAR(p.fecha_pago) = 2024 AND p.estado = 'Completado'
+GROUP BY cl.id
 ORDER BY total_pagado DESC
 LIMIT 1;
 
 
--- Generar un ranking de los 5 tipos de tarjeta con mayor monto total de apertura acumulado.
+-- Generar un ranking de los tipos de tarjeta con mayor monto total de apertura acumulado.
 
+SELECT tt.id, tt.nombre, SUM(cm.monto_total) AS Total_acumulado
+FROM Tipo_tarjetas tt
+INNER JOIN Tarjetas t ON  tt.id = t.tipo_tarjeta_id
+INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+WHERE cm.estado = 'Pago'
+GROUP BY tt.id, tt.nombre;
 
+-- Mostrar el promedio de saldo por estado de tarjeta.
 
--- Mostrar el promedio de saldo por estado de tarjeta (Activa, Vencida, Bloqueada, etc.).
+SELECT estado, AVG(saldo) 
+FROM Tarjetas
+GROUP BY estado;
 
 -- Listar las tarjetas que no han tenido ningún pago registrado.
 
--- Calcular el porcentaje de cuotas pagadas vs pendientes por mes durante 2025.
+SELECT t.id, t.cuenta_id, t.numero_tarjeta, cm.vencimiento_cuota, cm.estado
+FROM Tarjetas t
+INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+LEFT JOIN Pagos p ON cm.id = p.cuota_id
+WHERE p.id IS NULL;
+
+
+
