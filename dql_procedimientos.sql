@@ -76,3 +76,18 @@ END //
 DELIMITER ;
 
 CALL ps_reporte_cuotas_mensual(2025, 7)
+
+-- Actualizar los descuentos en caso de cambio en las políticas bancarias.
+
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS ps_actualizar_descuentos;
+CREATE PROCEDURE ps_actualizar_descuentos(IN p_nuevo_descuento DECIMAL(5,2), IN p_tipo_tarjeta_id INT)
+BEGIN
+    UPDATE Tipo_tarjetas
+    SET descuento = p_nuevo_descuento
+    WHERE id = p_tipo_tarjeta_id;
+END //
+DELIMITER ;
+
+CALL ps_actualizar_descuentos(20.00, 1);
