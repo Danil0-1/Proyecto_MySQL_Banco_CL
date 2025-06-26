@@ -169,3 +169,45 @@ END //
 DELIMITER ;
 
 CALL ps_movimientos_cuenta(1, 3, '2023-01-01', '2023-03-30');
+
+-- Calcular y registrar intereses mensuales de tarjetas de crédito
+
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS ps_calcular_intereses_tarjetas;
+
+CREATE PROCEDURE ps_calcular_intereses_tarjetas(IN p_tasa DECIMAL(5,2))
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE _tarjeta_id INT;
+    DECLARE _saldo DECIMAL(10,2);
+    DECLARE _total DECIMAL(10,2);
+
+    DECLARE cur CURSOR FOR
+        SELECT t.id, t.saldo
+        FROM Tarjetas t
+        INNER JOIN Categoria_tarjetas ct ON t.categoria_tarjeta_id = ct.id
+        WHERE ct.nombre = 'Credito' AND t.estado = 'Activa';
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO _tarjeta_id, _saldo;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SET _total = _saldo * p_tasa / 100;
+
+        INSERT INTO Intereses_tarjetas(tarjeta_id, monto_base, tasa, monto_interes)
+        VALUES (_tarjeta_id, _saldo, p_tasa, _total);
+    END LOOP;
+
+    CLOSE cur;
+END //
+
+DELIMITER ;
+
+CALL ps_calcular_intereses_tarjetas(27);
