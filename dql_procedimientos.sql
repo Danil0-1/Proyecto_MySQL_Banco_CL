@@ -35,4 +35,32 @@ DELIMITER ;
 CALL ps_registro_cuota(1);
 
 
+-- Procesar pagos y actualizar el historial de pagos de los clientes.
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_procesar_pago;
+CREATE PROCEDURE ps_procesar_pago(IN p_pago_id INT)
+BEGIN
+    DECLARE _estado_anterior ENUM('Completado', 'Rechazado', 'Pendiente', 'Cancelado', 'Inicio');
+    
+    START TRANSACTION;
+
+    SELECT estado INTO _estado_anterior
+    FROM Pagos
+    WHERE id = p_pago_id;
+
+    UPDATE Pagos
+    SET estado = 'Completado',
+        fecha_pago = CURDATE()
+    WHERE id = p_pago_id;
+
+    INSERT INTO Historial_de_pagos (pago_id, fecha_cambio, estado_anterior, nuevo_estado)
+    VALUES (p_pago_id, CURDATE(), _estado_anterior, 'Completado');
+
+    COMMIT;
+END //
+DELIMITER ;
+
+CALL ps_procesar_pago(4);
+
 
