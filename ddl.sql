@@ -79,7 +79,7 @@ CREATE TABLE Historial_de_pagos(
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     pago_id INT NOT NULL,
     fecha_cambio DATE NOT NULL,
-    estado_anterior ENUM('Completado', 'Rechazado', 'Pendiente', 'Cancelado') NOT NULL,
+    estado_anterior ENUM('Completado', 'Rechazado', 'Pendiente', 'Cancelado', 'Inicio') NOT NULL,
     nuevo_estado ENUM('Completado', 'Rechazado', 'Pendiente', 'Cancelado') NOT NULL,
     FOREIGN KEY (pago_id) REFERENCES Pagos(id) ON DELETE CASCADE
 );
