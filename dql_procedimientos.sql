@@ -91,3 +91,62 @@ END //
 DELIMITER ;
 
 CALL ps_actualizar_descuentos(20.00, 1);
+
+-- Registrar nuevos clientes y tarjetas automáticamente con los datos de apertura.
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_registrar_cliente_tarjeta;
+CREATE PROCEDURE ps_registrar_cliente_tarjeta(
+    IN p_nombre VARCHAR(100),
+    IN p_documento VARCHAR(20),
+    IN p_correo VARCHAR(100),
+    IN p_telefono VARCHAR(20),
+    IN p_tipo_cuenta_id INT,
+    IN p_tipo_tarjeta_id INT,
+    IN p_categoria_tarjeta_id INT,
+    IN p_monto_apertura DECIMAL(10,2),
+    IN p_numero_tarjeta VARCHAR(50),
+    IN p_limite_credito DECIMAL(10,2)
+)
+BEGIN
+    DECLARE _cliente_id INT;
+    DECLARE _cuenta_id INT;
+
+    INSERT INTO Clientes (nombre, documento, correo, fecha_registro, telefono)
+    VALUES (p_nombre, p_documento, p_correo, CURDATE(), p_telefono);
+
+    SET _cliente_id = LAST_INSERT_ID();
+
+    INSERT INTO Cuentas (tipo_cuenta_id, cliente_id, saldo, fecha_creacion)
+    VALUES (p_tipo_cuenta_id, _cliente_id, 0.00, CURDATE());
+    
+    SET _cuenta_id = LAST_INSERT_ID();
+
+    INSERT INTO Tarjetas(
+        tipo_tarjeta_id,
+        categoria_tarjeta_id,
+        cuenta_id,
+        monto_apertura,
+        saldo,
+        estado,
+        numero_tarjeta,
+        fecha_expiracion,
+        limite_credito
+    ) VALUES (
+        p_tipo_tarjeta_id,
+        p_categoria_tarjeta_id,
+        _cuenta_id,
+        p_monto_apertura,
+        p_monto_apertura, 
+        'Activa',
+        p_numero_tarjeta,
+        DATE_ADD(CURDATE(), INTERVAL 3 YEAR),
+        p_limite_credito
+    );
+END //
+DELIMITER ;
+
+CALL ps_registrar_cliente_tarjeta(
+    'Nuevo cliente desde procedimiento', '1905838722', 'procedimiento@gmail.com', 
+    '+57 3001234567', 1, 2, 1, 1000000.00, '4278589171712445', 5000000.00);  
+
