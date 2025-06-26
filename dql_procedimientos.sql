@@ -58,3 +58,21 @@ END //
 DELIMITER ;
 
 CALL ps_procesar_pago(5);
+
+-- Generar reportes mensuales de cuotas de manejo.
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_reporte_cuotas_mensual;
+CREATE PROCEDURE ps_reporte_cuotas_mensual(IN p_anio INT, IN p_mes INT)
+BEGIN
+    SELECT cdm.id AS cuota_id, cdm.tarjeta_id, cl.nombre AS cliente, cdm.monto_base, cdm.monto_total,
+        cdm.estado,cdm.vencimiento_cuota
+    FROM Cuotas_de_manejo cdm
+    INNER JOIN Tarjetas t ON cdm.tarjeta_id = t.id
+    INNER JOIN Cuentas cu ON t.cuenta_id = cu.id
+    INNER JOIN Clientes cl ON cu.cliente_id = cl.id
+    WHERE YEAR(cdm.vencimiento_cuota) = p_anio AND MONTH(cdm.vencimiento_cuota) = p_mes
+    ORDER BY cdm.vencimiento_cuota ASC;
+END //
+DELIMITER ;
+
+CALL ps_reporte_cuotas_mensual(2025, 7)
