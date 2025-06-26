@@ -50,7 +50,10 @@ INSERT INTO Clientes (nombre, documento, correo, fecha_registro, telefono) VALUE
 ('Jorge Luis Moreno', '906789012', 'jorgeluismoreno@gmail.com', '2023-07-05', '+57 3156789012'),
 ('Edwin Mauricio Leon', '907890123', 'edwinleon@gmail.com', '2023-07-05', '+57 3167890123'),
 ('Darío Alejandro Romero', '908901234', 'darioromero@gmail.com', '2023-07-05', '+57 3178901234'),
-('Cristofer Yesid Aguirre', '909012345', 'cristoferaguirre@gmail.com', '2023-07-05', '+57 3189012345');
+('Cristofer Yesid Aguirre', '909012345', 'cristoferaguirre@gmail.com', '2023-07-05', '+57 3189012345')
+('Señor pago atrasado 1', '909853897', 'misteratrasado@gmail.com','2020-01-01', '+57 3128643832'),
+('Señor pago atrasado 2', '908430897', 'misteratrasado2@gmail.com', '2020-01-01', '+57 3154366886'),
+('Señor pago atrasado 3', '909855397', 'misteratrasado3@gmail.com', '2020-01-01', '+57 3199870423');
 
 INSERT INTO Tipo_cuentas (id, nombre) VALUES
 (1, 'Ahorro'),
@@ -119,7 +122,10 @@ INSERT INTO Cuentas (tipo_cuenta_id, cliente_id, saldo, fecha_creacion) VALUES
 (2, 47, 500, '2023-07-10'),
 (2, 48, 603000, '2023-07-24'),
 (2, 49, 23950, '2023-07-17'),
-(2, 50, 2368500, '2023-07-09');
+(2, 50, 2368500, '2023-07-09')
+(1, 51, 402000, '2020-01-01'),
+(1, 52, 542000, '2020-01-01'),
+(1, 53, 1598000, '2020-01-01');
 INSERT INTO Categoria_tarjetas (id, nombre) VALUES
 (1, 'Credito'),
 (2, 'Debito');
@@ -177,7 +183,11 @@ INSERT INTO Tarjetas (id, tipo_tarjeta_id, categoria_tarjeta_id, cuenta_id, mont
 (47, 2, 1, 47, 100000, 509047.52, 'Bloqueada', '4385299834466166', '2026-07-10', 8110685.78),
 (48, 3, 1, 48, 100000, 138809.6, 'Activa', '213196894626000', '2026-07-24', 4511962.6),
 (49, 3, 1, 49, 100000, 963583.45, 'Activa', '6587678748090157', '2026-07-17', 6760496.42),
-(50, 1, 1, 50, 100000, 93737.09, 'Bloqueada', '4966398209229', '2026-07-09', 4267506.04);
+(50, 1, 1, 50, 100000, 93737.09, 'Bloqueada', '4966398209229', '2026-07-09', 4267506.04),
+(51, 1, 1, 51, 100000, 500000, 'Bloqueada', '44248273983479857', '2026-01-01', 250000.00),
+(52, 1, 1, 52, 100000, 500000, 'Bloqueada', '17535656633479834', '2026-01-01', 250000.00),
+(53, 1, 1, 53, 100000, 500000, 'Bloqueada', '15796683479867543', '2026-01-01', 250000.00);
+
 
 INSERT INTO Cuotas_de_manejo (id, tarjeta_id, monto_base, monto_total, vencimiento_cuota, estado) VALUES
 (1, 1, 50000.00, 47500.00, '2025-07-02', 'Pago'),
@@ -216,10 +226,19 @@ INSERT INTO Cuotas_de_manejo (id, tarjeta_id, monto_base, monto_total, vencimien
 (44, 44, 50000.00, 42500.00, '2025-07-02', 'Pago'),
 (45, 45, 50000.00, 47500.00, '2025-07-02', 'Pago'),
 (46, 46, 50000.00, 45000.00, '2025-07-02', 'Pendiente'),
-(47, 47, 50000.00, 47500.00, '202-07-02', 'Pendiente'),
+(47, 47, 50000.00, 47500.00, '2025-07-02', 'Pendiente'),
 (48, 48, 50000.00, 42500.00, '2025-07-02', 'Pago'),
 (49, 49, 50000.00, 42500.00, '2025-07-02', 'Pago'),
-(50, 50, 50000.00, 45000.00, '2025-07-02', 'Pendiente');
+(50, 50, 50000.00, 45000.00, '2025-07-02', 'Pendiente'),
+(51, 51, 50000.00, 45000.00, '2025-05-01', 'Pendiente'),
+(52, 52, 50000.00, 45000.00, '2025-05-01', 'Pendiente'),
+(53, 53, 50000.00, 45000.00, '2025-05-01', 'Pendiente'),
+(54, 51, 50000.00, 45000.00, '2025-06-01', 'Pendiente'),
+(55, 52, 50000.00, 45000.00, '2025-06-01', 'Pendiente'),
+(56, 53, 50000.00, 45000.00, '2025-06-01', 'Pendiente'),
+(57, 51, 50000.00, 45000.00, '2025-07-01', 'Pendiente'),
+(58, 52, 50000.00, 45000.00, '2025-07-01', 'Pendiente'),
+(59, 53, 50000.00, 45000.00, '2025-07-01', 'Pendiente');
 
 INSERT INTO Pagos (id, cuota_id, fecha_pago, total_pago, metodo_pago, estado) VALUES
 (1, 1, '2025-06-02', 47000.00, 'Tarjeta', 'Completado'),
