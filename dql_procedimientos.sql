@@ -150,3 +150,22 @@ CALL ps_registrar_cliente_tarjeta(
     'Nuevo cliente desde procedimiento', '1905838722', 'procedimiento@gmail.com', 
     '+57 3001234567', 1, 2, 1, 1000000.00, '4278589171712445', 5000000.00);  
 
+
+-- Listar los movimientos de una cuenta por rango de fechas y tipo de movimiento
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS ps_movimientos_cuenta;
+CREATE PROCEDURE ps_movimientos_cuenta(IN p_cuenta_id INT, IN p_tipo_movimiento_id INT, IN p_fecha_inicio DATE, IN p_fecha_fin DATE)
+BEGIN
+    SELECT m.id AS movimiento_id, m.fecha AS fecha_movimiento, tmc.nombre AS tipo_movimiento, m.monto AS monto_movimiento, 
+    m.saldo_anterior, m.nuevo_saldo, cl.nombre AS nombre_cliente
+    FROM Movimientos m
+    INNER JOIN Tipo_movimiento_cuenta tmc ON m.tipo_movimiento = tmc.id
+    INNER JOIN Cuentas c ON m.cuenta_id = c.id
+    INNER JOIN Clientes cl ON c.cliente_id = cl.id
+    WHERE m.cuenta_id = p_cuenta_id AND m.tipo_movimiento = p_tipo_movimiento_id AND m.fecha BETWEEN p_fecha_inicio AND p_fecha_fin;
+END //
+
+DELIMITER ;
+
+CALL ps_movimientos_cuenta(1, 3, '2023-01-01', '2023-03-30');
