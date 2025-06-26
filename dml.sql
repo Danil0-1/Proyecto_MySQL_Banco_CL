@@ -50,7 +50,7 @@ INSERT INTO Clientes (nombre, documento, correo, fecha_registro, telefono) VALUE
 ('Jorge Luis Moreno', '906789012', 'jorgeluismoreno@gmail.com', '2023-07-05', '+57 3156789012'),
 ('Edwin Mauricio Leon', '907890123', 'edwinleon@gmail.com', '2023-07-05', '+57 3167890123'),
 ('Darío Alejandro Romero', '908901234', 'darioromero@gmail.com', '2023-07-05', '+57 3178901234'),
-('Cristofer Yesid Aguirre', '909012345', 'cristoferaguirre@gmail.com', '2023-07-05', '+57 3189012345')
+('Cristofer Yesid Aguirre', '909012345', 'cristoferaguirre@gmail.com', '2023-07-05', '+57 3189012345'),
 ('Señor pago atrasado 1', '909853897', 'misteratrasado@gmail.com','2020-01-01', '+57 3128643832'),
 ('Señor pago atrasado 2', '908430897', 'misteratrasado2@gmail.com', '2020-01-01', '+57 3154366886'),
 ('Señor pago atrasado 3', '909855397', 'misteratrasado3@gmail.com', '2020-01-01', '+57 3199870423');
@@ -122,7 +122,7 @@ INSERT INTO Cuentas (tipo_cuenta_id, cliente_id, saldo, fecha_creacion) VALUES
 (2, 47, 500, '2023-07-10'),
 (2, 48, 603000, '2023-07-24'),
 (2, 49, 23950, '2023-07-17'),
-(2, 50, 2368500, '2023-07-09')
+(2, 50, 2368500, '2023-07-09'),
 (1, 51, 402000, '2020-01-01'),
 (1, 52, 542000, '2020-01-01'),
 (1, 53, 1598000, '2020-01-01');
