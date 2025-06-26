@@ -211,3 +211,39 @@ END //
 DELIMITER ;
 
 CALL ps_calcular_intereses_tarjetas(27);
+
+-- Bloquear automáticamente tarjetas con más de 3 cuotas vencidas
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_bloquear_tarjetas_vencidas;
+CREATE PROCEDURE ps_bloquear_tarjetas_vencidas()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE _tarjeta_id INT;
+    DECLARE cur CURSOR FOR
+        SELECT t.id
+        FROM Tarjetas t
+        INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+        WHERE cm.estado = 'Pendiente' 
+        GROUP BY t.id
+        HAVING COUNT(cm.id) >= 3;
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+    tarjetas_loop: LOOP
+        FETCH cur INTO _tarjeta_id;
+        IF done THEN
+            LEAVE tarjetas_loop;
+        END IF;
+
+        UPDATE Tarjetas
+        SET estado = 'Bloqueada'
+        WHERE id = _tarjeta_id;
+    END LOOP tarjetas_loop;
+    CLOSE cur;
+END //
+
+DELIMITER ;
+
+CALL ps_bloquear_tarjetas_vencidas();
