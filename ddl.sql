@@ -116,7 +116,7 @@ CREATE TABLE Tipo_movimiento_tarjeta(
 );
 
 CREATE TABLE Movimientos_tarjeta (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     tipo_movimiento_tarjeta INT NOT NULL,
     tarjeta_id INT NOT NULL,
     fecha DATE NOT NULL DEFAULT (CURRENT_DATE),
@@ -127,7 +127,7 @@ CREATE TABLE Movimientos_tarjeta (
 );
 
 CREATE TABLE Cuotas_credito (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     movimiento_id INT NOT NULL,
     numero_cuota INT NOT NULL,
     fecha_vencimiento DATE NOT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE Cuotas_credito (
 );
 
 CREATE TABLE Intereses_tarjetas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     tarjeta_id INT NOT NULL,
     fecha_generacion DATE NOT NULL DEFAULT (CURRENT_DATE),
     monto_base DECIMAL(10,2) NOT NULL,
@@ -147,7 +147,7 @@ CREATE TABLE Intereses_tarjetas (
 );
 
 CREATE TABLE Pagos_tarjeta (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     cuota_credito_id INT NOT NULL,
     fecha_pago DATE NOT NULL DEFAULT (CURRENT_DATE),
     monto DECIMAL(10,2) NOT NULL,
