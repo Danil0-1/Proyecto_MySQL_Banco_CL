@@ -9,7 +9,7 @@ INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id;
 
 -- Consultar el historial de pagos de un cliente específico.
 
-SELECT cl.id AS cliente_id, p.fecha_pago, p.total_pago, p.metodo_pago, hp.fecha_cambio, hp.estado_anterior, hp.nuevo_estado
+SELECT cl.id AS cliente_id, p.fecha_pago, p.total_pago, p.metodo_pago, hp.fecha_cambio, hp.nuevo_estado AS estado
 FROM Clientes cl
 INNER JOIN Cuentas cu ON cl.id = cu.cliente_id
 INNER JOIN Tarjetas t ON cu.id = t.cuenta_id
@@ -22,7 +22,8 @@ WHERE cl.id = 3;
 
 SELECT SUM(monto_total) AS total_pagado
 FROM Cuotas_de_manejo
-WHERE MONTH(vencimiento_cuota) = 4 AND YEAR(vencimiento_cuota) = 2025 AND estado = 'Pago';
+WHERE MONTH(vencimiento_cuota) = 7 AND YEAR(vencimiento_cuota) = 2025 AND estado = 'Pago';
+-- Mes 7 ya que solo se tiene registros a partir de ese mes
 
 -- Consultar las cuotas de manejo de los clientes con descuento aplicado.
 
@@ -41,15 +42,14 @@ FROM Cuotas_de_manejo cm
 INNER JOIN Tarjetas t ON cm.tarjeta_id = t.id
 GROUP BY t.id, cm.vencimiento_cuota;
 
--- Obtener los clientes con pagos pendientes durante los últimos tres meses.
+-- Obtener los clientes con las cuotas de manejo pendientes durante los últimos tres meses.
 
-SELECT cl.id AS cliente_id, cl.nombre, cm.vencimiento_cuota, cm.monto_total, p.total_pago, p.estado
+SELECT cl.id AS cliente_id, cl.nombre, cm.vencimiento_cuota, cm.monto_total
 FROM Clientes cl
 INNER JOIN Cuentas cu ON cl.id = cu.cliente_id
 INNER JOIN Tarjetas t ON cu.id = t.cuenta_id
 INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
-INNER JOIN Pagos p ON cm.id = p.cuota_id
-WHERE p.estado = 'Pendiente' AND cm.vencimiento_cuota >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH) AND cm.vencimiento_cuota < CURDATE();
+WHERE cm.estado = 'Pendiente' AND cm.vencimiento_cuota >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH) AND cm.vencimiento_cuota < CURDATE();
 
 -- Consultar las cuotas de manejo aplicadas a cada tipo de tarjeta.
 
@@ -69,12 +69,14 @@ INNER JOIN Tipo_tarjetas tt ON t.tipo_tarjeta_id = tt.id
 WHERE YEAR(cm.vencimiento_cuota) = 2025 AND cm.estado = 'Pago'
 GROUP BY tt.nombre;
 
--- Consultar las tarjetas con el mayor y menor monto de apertura.
+-- Obtener la suma total de dinero movido por cada tarjeta.
 
-SELECT id, numero_tarjeta, monto_apertura
-FROM Tarjetas 
-WHERE monto_apertura = (SELECT MAX(monto_apertura) FROM Tarjetas)
-   OR monto_apertura = (SELECT MIN(monto_apertura) FROM Tarjetas);
+SELECT t.numero_tarjeta,tm.nombre AS tipo_movimiento,SUM(mt.monto) AS total_movido
+FROM Tarjetas t
+JOIN Movimientos_tarjeta mt ON mt.tarjeta_id = t.id
+JOIN Tipo_movimiento_tarjeta tm ON tm.id = mt.tipo_movimiento_tarjeta
+GROUP BY t.numero_tarjeta, tm.nombre;
+
 
 
 
@@ -95,14 +97,14 @@ FROM Tarjetas t
 INNER JOIN Tipo_tarjetas tt ON t.tipo_tarjeta_id = tt.id
 WHERE estado = 'Activa'
 
--- Listar los clientes que tienen más de una tarjeta registrada.
+-- -- Listar los clientes junto con el número total de tarjetas que tienen registradas.
 
-SELECT  cl.id AS cliente_id, cl.nombre, cl.documento, COUNT(t.id) AS cantidad_tarjetas
-FROM Tarjetas t
-INNER JOIN Cuentas cu ON t.cuenta_id = cu.id
-INNER JOIN Clientes cl ON cu.cliente_id = cl.id
-GROUP BY cl.id, cl.nombre, cl.documento
-HAVING COUNT(t.id) > 1
+SELECT c.id AS cliente_id, c.nombre,COUNT(t.id) AS total_tarjetas
+FROM Clientes c
+JOIN Cuentas cu ON cu.cliente_id = c.id
+JOIN Tarjetas t ON t.cuenta_id = cu.id
+GROUP BY c.id, c.nombre;
+
 
 -- Mostrar las cuotas de manejo vencidas que aún estén pendientes
 
@@ -126,7 +128,7 @@ INNER JOIN Cuentas cu ON t.cuenta_id = cu.id
 INNER JOIN Clientes cl ON cu.cliente_id = cl.id
 WHERE fecha_expiracion >= CURDATE() AND fecha_expiracion <= CURDATE() + INTERVAL 2 YEAR;
 
--- Obtener el cliente con el mayor total pagado en cuotas de manejo durante 2024.
+-- Obtener el cliente con el mayor total pagado en cuotas de manejo durante 2025.
 
 SELECT cl.id, SUM(p.total_pago) AS total_pagado
 FROM Clientes cl
@@ -134,7 +136,7 @@ INNER JOIN Cuentas cu ON cl.id = cu.cliente_id
 INNER JOIN Tarjetas t ON cu.id = t.cuenta_id
 INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
 INNER JOIN Pagos p ON cm.id = p.cuota_id
-WHERE YEAR(p.fecha_pago) = 2024 AND p.estado = 'Completado'
+WHERE YEAR(p.fecha_pago) = 2025 AND p.estado = 'Completado'
 GROUP BY cl.id
 ORDER BY total_pagado DESC
 LIMIT 1;
@@ -163,5 +165,14 @@ INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
 LEFT JOIN Pagos p ON cm.id = p.cuota_id
 WHERE p.id IS NULL;
 
+-- Consultar todos los movimientos realizados con las tarjetas
+
+SELECT t.id AS tarjeta_id, t.numero_tarjeta, tt.nombre AS tipo_tarjeta, ct.nombre AS categoria, mt.fecha,
+   tm.nombre AS tipo_movimiento, mt.monto, mt.cuotas
+FROM Tarjetas t
+JOIN Tipo_tarjetas tt ON t.tipo_tarjeta_id = tt.id
+JOIN Categoria_tarjetas ct ON t.categoria_tarjeta_id = ct.id
+JOIN Movimientos_tarjeta mt ON mt.tarjeta_id = t.id
+JOIN Tipo_movimiento_tarjeta tm ON mt.tipo_movimiento_tarjeta = tm.id;
 
 
