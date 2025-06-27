@@ -417,3 +417,23 @@ DELIMITER ;
 
 CALL ps_revertir_pago_tarjeta(1)
 
+-- Aumentar límite de crédito automáticamente si el usuario cumplio con los ultimos pagos
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_aumentar_limite_credito;
+CREATE PROCEDURE ps_aumentar_limite_credito()
+BEGIN
+    UPDATE Tarjetas t
+    SET t.limite_credito = t.limite_credito * 1.10
+    WHERE t.categoria_tarjeta_id = 1 
+    AND NOT EXISTS (
+          SELECT 1
+          FROM Movimientos_tarjeta mt
+          JOIN Cuotas_credito cc ON cc.movimiento_id = mt.id
+          WHERE mt.tarjeta_id = t.id AND cc.estado != 'Pagada' AND cc.fecha_vencimiento >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+      );
+END //
+DELIMITER ;
+
+CALL ps_aumentar_limite_credito();
+
