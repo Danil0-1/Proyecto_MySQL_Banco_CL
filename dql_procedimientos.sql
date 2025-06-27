@@ -429,7 +429,7 @@ BEGIN
     AND NOT EXISTS (
           SELECT 1
           FROM Movimientos_tarjeta mt
-          JOIN Cuotas_credito cc ON cc.movimiento_id = mt.id
+          INNER JOIN Cuotas_credito cc ON cc.movimiento_id = mt.id
           WHERE mt.tarjeta_id = t.id AND cc.estado != 'Pagada' AND cc.fecha_vencimiento >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
       );
 END //
@@ -527,3 +527,51 @@ DELIMITER ;
 
 CALL ps_cerrar_cuentas_inactivas();
 
+-- Resumen de pagos dependiendo su tipo realizado
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_resumen_pagos_cliente;
+CREATE PROCEDURE ps_resumen_pagos_cliente(IN p_cliente_id INT)
+BEGIN
+    SELECT c.id AS cliente_id,COUNT(CASE WHEN p.estado = 'Completado' THEN 1 END) AS pagos_completados, COUNT(CASE WHEN p.estado = 'Rechazado' THEN 1 END) AS pagos_rechazados,
+        COUNT(CASE WHEN p.estado = 'Cancelado' THEN 1 END) AS pagos_cancelados
+    FROM Clientes c
+    INNER JOIN Cuentas cu ON cu.cliente_id = c.id
+    INNER JOIN Tarjetas t ON t.cuenta_id = cu.id
+    INNER JOIN Cuotas_de_manejo cm ON cm.tarjeta_id = t.id
+    INNER JOIN Pagos p ON p.cuota_id = cm.id
+    WHERE c.id = p_cliente_id
+    GROUP BY c.id;
+END //
+DELIMITER ;
+CALL ps_resumen_pagos_cliente(3);
+
+-- Actualizar estado de una cuota según pagos registrados
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_actualizar_estado_cuota;
+CREATE PROCEDURE ps_actualizar_estado_cuota(IN p_cuota_id INT)
+BEGIN
+    DECLARE _total_pagado DECIMAL(10,2);
+    DECLARE _valor_cuota DECIMAL(10,2);
+
+    SELECT SUM(monto) INTO _total_pagado
+    FROM Pagos_tarjeta
+    WHERE cuota_credito_id = p_cuota_id;
+
+    SELECT valor_cuota INTO _valor_cuota
+    FROM Cuotas_credito
+    WHERE id = p_cuota_id;
+
+    IF _total_pagado >= _valor_cuota THEN
+        UPDATE Cuotas_credito
+        SET estado = 'Pagada'
+        WHERE id = p_cuota_id;
+    END IF;
+END //
+DELIMITER ;
+
+CALL ps_actualizar_estado_cuota(2)
+
+INSERT INTO Pagos_tarjeta (cuota_credito_id, fecha_pago, monto)
+VALUES (2, CURDATE(), 1000000);
