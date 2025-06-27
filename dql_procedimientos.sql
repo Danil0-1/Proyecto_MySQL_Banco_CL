@@ -505,3 +505,25 @@ END //
 DELIMITER ;
 
 CALL ps_compra_con_cuotas(2, 600000, 3);
+
+-- Cerrar cuentas inactivas sin movimientos en 3 años
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_cerrar_cuentas_inactivas;
+CREATE PROCEDURE ps_cerrar_cuentas_inactivas()
+BEGIN
+    UPDATE Cuentas
+    SET saldo = 0
+    WHERE id IN (
+    SELECT id FROM (
+        SELECT c.id
+        FROM Cuentas c
+        LEFT JOIN Movimientos m ON c.id = m.cuenta_id
+        WHERE m.fecha IS NULL OR m.fecha < DATE_SUB(CURDATE(), INTERVAL 3 YEAR)
+    ) AS cuentas_inactivas
+);
+END //
+DELIMITER ;
+
+CALL ps_cerrar_cuentas_inactivas();
+
