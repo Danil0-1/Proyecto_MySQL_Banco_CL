@@ -126,3 +126,28 @@ END //
 DELIMITER ;
 
 SELECT fn_cuotas_credito(1) AS Total_deuda;
+
+-- Estimar el total de pagos realizados por tipo de tarjeta durante un período determinado.
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_total_pagos_por_tipo;
+CREATE FUNCTION fn_total_pagos_por_tipo(p_tipo_tarjeta_id INT, p_fecha_inicio DATE, p_fecha_fin DATE)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _total DECIMAL(10,2) DEFAULT 0;
+
+    SELECT IFNULL(SUM(pt.monto), 0) INTO _total
+    FROM Pagos_tarjeta pt
+    INNER JOIN Cuotas_credito cc ON pt.cuota_credito_id = cc.id
+    INNER JOIN Movimientos_tarjeta mt ON cc.movimiento_id = mt.id
+    INNER JOIN Tarjetas t ON mt.tarjeta_id = t.id
+    WHERE t.tipo_tarjeta_id = p_tipo_tarjeta_id AND pt.fecha_pago BETWEEN p_fecha_inicio AND p_fecha_fin;
+
+    RETURN _total;
+END //
+
+DELIMITER ;
+
+SELECT fn_total_pagos_por_tipo(1, '2020-01-01', '2026-01-01')
