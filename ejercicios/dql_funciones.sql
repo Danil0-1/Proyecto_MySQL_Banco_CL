@@ -151,3 +151,27 @@ END //
 DELIMITER ;
 
 SELECT fn_total_pagos_por_tipo(1, '2020-01-01', '2026-01-01')
+
+-- Calcular el monto total de las cuotas de manejo para todos los clientes de un mes.
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_total_cuotas_manejo_mes;
+CREATE FUNCTION fn_total_cuotas_manejo_mes(p_mes INT, p_anio INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _total DECIMAL(10,2) DEFAULT 0;
+
+    SELECT SUM(monto_total) INTO _total
+    FROM Cuotas_de_manejo
+    WHERE MONTH(vencimiento_cuota) = p_mes AND YEAR(vencimiento_cuota) = p_anio;
+
+    RETURN _total;
+END //
+
+DELIMITER ;
+
+SELECT fn_total_cuotas_manejo_mes(6, 2025);
+
+
