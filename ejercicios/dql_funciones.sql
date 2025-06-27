@@ -85,7 +85,8 @@ BEGIN
             SET _pagos_clientes = _pagos_clientes + IFNULL(_pago_individual, 0);
         END LOOP;
 
-    SET _total_restante = _total_cuota - _pagos_clientes;
+        SET _total_restante = _total_cuota - _pagos_clientes;
+    CLOSE cur;
 
     IF _total_restante < 0 THEN
         SET _total_restante = 0;
@@ -98,3 +99,30 @@ END //
 DELIMITER ;
 
 SELECT fn_saldo_pendiente(1) AS Total_pendiente;
+
+
+-- Calcular el total pendiente de las cuotas de credito de un cliente.
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_cuotas_credito;
+CREATE FUNCTION fn_cuotas_credito(p_cliente_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _total_deuda DECIMAL(10,2) DEFAULT 0;
+
+    SELECT IFNULL(SUM(cc.valor_cuota), 0) INTO _total_deuda
+    FROM Clientes cl
+    INNER JOIN Cuentas cu ON cu.cliente_id = cl.id
+    INNER JOIN Tarjetas t ON t.cuenta_id = cu.id
+    INNER JOIN Movimientos_tarjeta mt ON mt.tarjeta_id = t.id
+    LEFT JOIN Cuotas_credito cc ON cc.movimiento_id = mt.id
+    WHERE cl.id = p_cliente_id AND cc.estado = 'Pendiente';
+
+    RETURN _total_deuda;
+END //
+
+DELIMITER ;
+
+SELECT fn_cuotas_credito(1) AS Total_deuda;
