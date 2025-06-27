@@ -350,3 +350,22 @@ END //
 
 DELIMITER ;
 CALL ps_retiro_cajero(51, 123456)
+
+
+-- Consultar clientes con tarjetas vencidas y sin pagos recientes
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_clientes_tarjetas_vencidas_sin_pago;
+CREATE PROCEDURE ps_clientes_tarjetas_vencidas_sin_pago()
+BEGIN
+    SELECT DISTINCT cli.id AS cliente_id, cli.nombre, cli.documento, cli.correo
+    FROM Clientes cli
+    JOIN Cuentas cu ON cu.cliente_id = cli.id
+    JOIN Tarjetas t ON t.cuenta_id = cu.id
+    LEFT JOIN Cuotas_de_manejo cm ON cm.tarjeta_id = t.id
+    LEFT JOIN Pagos p ON p.cuota_id = cm.id
+    WHERE t.fecha_expiracion < CURDATE() AND p.id IS NULL;
+END //
+DELIMITER ;
+
+CALL ps_clientes_tarjetas_vencidas_sin_pago()
