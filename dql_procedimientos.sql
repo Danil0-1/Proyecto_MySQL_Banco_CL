@@ -437,3 +437,38 @@ DELIMITER ;
 
 CALL ps_aumentar_limite_credito();
 
+-- Transferir saldo entre cuentas bancarias
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_transferencia_entre_cuentas;
+CREATE PROCEDURE ps_transferencia_entre_cuentas(IN p_cliente_id INT, IN p_cuenta_origen INT, IN p_cuenta_destino INT, IN p_monto DECIMAL(10,2))
+BEGIN
+    DECLARE _saldo_origen DECIMAL(10,2);
+
+    SELECT saldo INTO _saldo_origen
+    FROM Cuentas
+    WHERE id = p_cuenta_origen AND cliente_id = p_cliente_id;
+
+    IF _saldo_origen >= p_monto THEN
+        UPDATE Cuentas
+        SET saldo = saldo - p_monto
+        WHERE id = p_cuenta_origen;
+
+        UPDATE Cuentas
+        SET saldo = saldo + p_monto
+        WHERE id = p_cuenta_destino;
+
+        INSERT INTO Movimientos (cuenta_id, tipo_movimiento, monto, saldo_anterior, nuevo_saldo)
+        VALUES (p_cuenta_origen, 3, p_monto, _saldo_origen, _saldo_origen - p_monto);
+
+        INSERT INTO Movimientos (cuenta_id, tipo_movimiento, monto, saldo_anterior, nuevo_saldo)
+        VALUES 
+        (p_cuenta_destino, 1, p_monto,(SELECT saldo - p_monto FROM Cuentas WHERE id = p_cuenta_destino), (SELECT saldo FROM Cuentas WHERE id = p_cuenta_destino));
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Saldo insuficiente en la cuenta';
+    END IF;
+END //
+DELIMITER ;
+
+CALL ps_transferencia_entre_cuentas(1, 1, 4, 95645);
