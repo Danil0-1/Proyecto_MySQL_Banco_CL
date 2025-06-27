@@ -324,3 +324,29 @@ BEGIN
 END //
 DELIMITER ;
 CALL ps_asignar_tarjeta_debito(1);
+
+
+-- Registrar un retiro por cajero y actualizar saldo
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_retiro_cajero;
+CREATE PROCEDURE ps_retiro_cajero(IN p_cuenta_id INT, IN p_monto DECIMAL(10,2))
+BEGIN
+    DECLARE _saldo_actual DECIMAL(10,2);
+
+    SELECT saldo INTO _saldo_actual FROM Cuentas WHERE id = p_cuenta_id;
+
+    IF _saldo_actual < p_monto THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Saldo insuficiente';
+    ELSE
+        UPDATE Cuentas 
+        SET saldo = saldo - p_monto 
+        WHERE id = p_cuenta_id;
+
+        INSERT INTO Movimientos (cuenta_id, tipo_movimiento, monto, saldo_anterior, nuevo_saldo)
+        VALUES (p_cuenta_id, 3, p_monto, _saldo_actual, _saldo_actual - p_monto);
+    END IF;
+END //
+
+DELIMITER ;
+CALL ps_retiro_cajero(51, 123456)
