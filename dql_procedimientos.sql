@@ -387,3 +387,33 @@ BEGIN
 END //
 DELIMITER ;
 CALL ps_reporte_intereses_mensual(6, 2025);
+
+
+--  Revertir un pago de tarjeta y actualizar historial
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_revertir_pago_tarjeta;
+CREATE PROCEDURE ps_revertir_pago_tarjeta(IN p_pago_id INT)
+BEGIN
+    DECLARE _estado_actual ENUM('Completado', 'Rechazado', 'Pendiente', 'Cancelado');
+
+    SELECT estado INTO _estado_actual
+    FROM Pagos
+    WHERE id = p_pago_id;
+
+    IF _estado_actual = 'Cancelado' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El pago ya está cancelado.';
+    ELSE
+        UPDATE Pagos
+        SET estado = 'Cancelado'
+        WHERE id = p_pago_id;
+
+        INSERT INTO Historial_de_pagos (pago_id, fecha_cambio, estado_anterior, nuevo_estado)
+        VALUES (p_pago_id, CURDATE(), _estado_actual, 'Cancelado');
+    END IF;
+END //
+DELIMITER ;
+
+CALL ps_revertir_pago_tarjeta(1)
+
