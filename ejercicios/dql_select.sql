@@ -1,5 +1,58 @@
 USE banco_cl;
 
+-- CONSULTAS GENERALES TABLAS
+
+SELECT *
+FROM Clientes;
+
+SELECT *
+FROM Cuentas;
+
+SELECT *
+FROM Movimientos;
+
+SELECT *
+FROM Tipo_movimiento_cuenta;
+
+SELECT *
+FROM Tipo_cuentas;
+
+SELECT *
+FROM Tarjetas;
+
+SELECT *
+FROM Seguridad_tarjetas;
+
+SELECT *
+FROM Intereses_tarjetas;
+
+SELECT *
+FROM Movimientos_tarjeta;
+
+SELECT *
+FROM Tipo_movimiento_tarjeta;
+
+SELECT *
+FROM Cuotas_credito;
+
+SELECT *
+FROM Pagos_tarjeta;
+
+SELECT *
+FROM Categoria_tarjetas;
+
+SELECT *
+FROM Tipo_tarjetas;
+
+SELECT *
+FROM Cuotas_de_manejo;
+
+SELECT *
+FROM Pagos;
+
+SELECT *
+FROM Historial_de_pagos;
+
 
 -- Obtener el listado de todas las tarjetas de los clientes junto con su cuota de manejo.
 
