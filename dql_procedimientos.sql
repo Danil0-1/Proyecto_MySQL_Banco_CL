@@ -369,3 +369,21 @@ END //
 DELIMITER ;
 
 CALL ps_clientes_tarjetas_vencidas_sin_pago()
+
+-- Generar reporte mensual de intereses cobrados por tarjeta
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_reporte_intereses_mensual;
+CREATE PROCEDURE ps_reporte_intereses_mensual(IN p_mes INT, IN p_anio INT)
+BEGIN
+    SELECT t.id AS tarjeta_id, t.numero_tarjeta, c.id AS cliente_id,c.nombre AS cliente,
+        SUM(i.monto_interes) AS total_intereses
+    FROM Intereses_tarjetas i
+    INNER JOIN Tarjetas t ON i.tarjeta_id = t.id
+    INNER JOIN Cuentas cu ON t.cuenta_id = cu.id
+    INNER JOIN Clientes c ON cu.cliente_id = c.id
+    WHERE MONTH(i.fecha_generacion) = p_mes AND YEAR(i.fecha_generacion) = p_anio
+    GROUP BY t.id, t.numero_tarjeta, c.id, c.nombre;
+END //
+DELIMITER ;
+CALL ps_reporte_intereses_mensual(6, 2025);
