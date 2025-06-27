@@ -472,3 +472,36 @@ END //
 DELIMITER ;
 
 CALL ps_transferencia_entre_cuentas(1, 1, 4, 95645);
+
+
+-- Registrar una compra con tarjeta y generar cuotas si es a crédito
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_compra_con_cuotas;
+CREATE PROCEDURE ps_compra_con_cuotas(IN p_tarjeta_id INT, IN p_monto DECIMAL(10,2), IN p_cuotas INT)
+BEGIN
+    DECLARE _categoria INT;
+    DECLARE _id_movimiento INT;
+    DECLARE i INT DEFAULT 1;
+
+    SELECT categoria_tarjeta_id INTO _categoria
+    FROM Tarjetas
+    WHERE id = p_tarjeta_id;
+
+    INSERT INTO Movimientos_tarjeta (tipo_movimiento_tarjeta, tarjeta_id, monto, cuotas)
+    VALUES (1, p_tarjeta_id, p_monto, p_cuotas);
+
+    SET _id_movimiento = LAST_INSERT_ID();
+
+    IF _categoria = 1 THEN
+        WHILE i <= p_cuotas DO
+            INSERT INTO Cuotas_credito (movimiento_id, numero_cuota, fecha_vencimiento, valor_cuota)
+            VALUES 
+            ( _id_movimiento, i, DATE_ADD(CURDATE(), INTERVAL i MONTH), ROUND(p_monto / p_cuotas, 2));
+            SET i = i + 1;
+        END WHILE;
+    END IF;
+END //
+DELIMITER ;
+
+CALL ps_compra_con_cuotas(2, 600000, 3);
