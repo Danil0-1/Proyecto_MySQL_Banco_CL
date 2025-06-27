@@ -247,3 +247,46 @@ END //
 DELIMITER ;
 
 CALL ps_bloquear_tarjetas_vencidas();
+
+-- Generar un resumen financiero de un cliente
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_resumen_financiero_cliente;
+CREATE PROCEDURE ps_resumen_financiero_cliente(IN p_cliente_id INT)
+BEGIN
+    DECLARE _saldo_total_cuentas DECIMAL(10,2);
+    DECLARE _cantidad_tarjetas INT;
+    DECLARE _saldo_total_tarjetas DECIMAL(10,2);
+    DECLARE _deuda_total_cuotas DECIMAL(10,2);
+
+    SELECT SUM(saldo)
+    INTO _saldo_total_cuentas
+    FROM Cuentas
+    WHERE cliente_id = p_cliente_id;
+
+    SELECT COUNT(*)
+    INTO _cantidad_tarjetas
+    FROM Tarjetas t
+    INNER JOIN Cuentas c ON t.cuenta_id = c.id
+    WHERE c.cliente_id = p_cliente_id;
+
+    SELECT SUM(t.saldo)
+    INTO _saldo_total_tarjetas
+    FROM Tarjetas t
+    INNER JOIN Cuentas c ON t.cuenta_id = c.id
+    WHERE c.cliente_id = p_cliente_id;
+
+    SELECT SUM(cc.valor_cuota)
+    INTO _deuda_total_cuotas
+    FROM Cuotas_credito cc
+    INNER JOIN Movimientos_tarjeta mt ON cc.movimiento_id = mt.id
+    INNER JOIN Tarjetas t ON mt.tarjeta_id = t.id
+    INNER JOIN Cuentas c ON t.cuenta_id = c.id
+    WHERE c.cliente_id = p_cliente_id AND cc.estado = 'Pendiente';
+
+    SELECT _saldo_total_cuentas AS saldo_total_cuentas, _cantidad_tarjetas AS cantidad_tarjetas,
+        _saldo_total_tarjetas AS saldo_total_tarjetas, _deuda_total_cuotas AS deuda_total_cuotas;
+END //
+DELIMITER ;
+
+CALL ps_resumen_financiero_cliente(1);
