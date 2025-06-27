@@ -290,3 +290,37 @@ END //
 DELIMITER ;
 
 CALL ps_resumen_financiero_cliente(1);
+
+
+-- Asignar automáticamente una tarjeta de débito a una cuenta de ahorro
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS ps_asignar_tarjeta_debito;
+CREATE PROCEDURE ps_asignar_tarjeta_debito(IN p_cuenta_id INT)
+BEGIN
+    DECLARE _tipo_cuenta INT;
+
+    SELECT tipo_cuenta_id INTO _tipo_cuenta
+    FROM Cuentas
+    WHERE id = p_cuenta_id;
+
+    IF _tipo_cuenta = 1 THEN
+        INSERT INTO Tarjetas (
+            tipo_tarjeta_id,
+            categoria_tarjeta_id,   
+            cuenta_id,
+            monto_apertura,
+            saldo,
+            estado,
+            numero_tarjeta,
+            fecha_expiracion
+        ) VALUES 
+        (1, 2, p_cuenta_id, 0, 0, 'Activa', 0, DATE_ADD(CURDATE(), INTERVAL 3 YEAR));
+
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La cuenta no es de credito';
+    END IF;
+END //
+DELIMITER ;
+CALL ps_asignar_tarjeta_debito(1);
