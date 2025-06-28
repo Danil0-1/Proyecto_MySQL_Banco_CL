@@ -424,3 +424,44 @@ DELIMITER ;
 
 SELECT fn_total_descuentos_aplicados(1) AS Total_con_descuentos;
 
+
+--  Calcular cuánto le falta por pagar a un cliente en cuotas de crédito
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_total_credito_pendiente_cliente;
+CREATE FUNCTION fn_total_credito_pendiente_cliente(p_cliente_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _total_credito DECIMAL(10,2) DEFAULT 0.00;
+    DECLARE _pagado DECIMAL(10,2) DEFAULT 0.00;
+    DECLARE _pendiente DECIMAL(10,2);
+
+    SELECT IFNULL(SUM(cc.valor_cuota), 0) INTO _total_credito
+    FROM Clientes cl
+    JOIN Cuentas cu ON cu.cliente_id = cl.id
+    JOIN Tarjetas t ON t.cuenta_id = cu.id
+    JOIN Movimientos_tarjeta mt ON mt.tarjeta_id = t.id
+    JOIN Cuotas_credito cc ON cc.movimiento_id = mt.id
+    WHERE cl.id = p_cliente_id AND cc.estado = 'Pendiente';
+
+    SELECT IFNULL(SUM(pt.monto), 0) INTO _pagado
+    FROM Clientes cl
+    JOIN Cuentas cu ON cu.cliente_id = cl.id
+    JOIN Tarjetas t ON t.cuenta_id = cu.id
+    JOIN Movimientos_tarjeta mt ON mt.tarjeta_id = t.id
+    JOIN Cuotas_credito cc ON cc.movimiento_id = mt.id
+    JOIN Pagos_tarjeta pt ON pt.cuota_credito_id = cc.id
+    WHERE cl.id = p_cliente_id AND cc.estado = 'Pendiente';
+
+    SET _pendiente = _total_credito - _pagado;
+
+    IF _pendiente < 0 THEN
+        SET _pendiente = 0;
+    END IF;
+
+    RETURN _pendiente;
+END //
+
+DELIMITER ;
