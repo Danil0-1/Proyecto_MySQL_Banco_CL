@@ -175,3 +175,53 @@ DELIMITER ;
 SELECT fn_total_cuotas_manejo_mes(6, 2025);
 
 
+-- Calcular el promedio de pagos realizados por un cliente en sus tarjetas de crédito.
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_promedio_pagos_credito;
+CREATE FUNCTION fn_promedio_pagos_credito(p_cliente_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _promedio INT DEFAULT 0;
+
+    SELECT AVG(pt.monto) INTO _promedio
+    FROM Clientes cl
+    INNER JOIN Cuentas cu ON cu.cliente_id = cl.id
+    INNER JOIN Tarjetas t ON t.cuenta_id = cu.id
+    INNER JOIN Movimientos_tarjeta mt ON mt.tarjeta_id = t.id
+    INNER JOIN Cuotas_credito cc ON cc.movimiento_id = mt.id
+    INNER JOIN Pagos_tarjeta pt ON pt.cuota_credito_id = cc.id
+    WHERE t.categoria_tarjeta_id = 1 AND cl.id = p_cliente_id;
+
+    RETURN _promedio;
+END //
+DELIMITER ;
+
+SELECT fn_promedio_pagos_credito(1) AS Promedio;
+
+
+-- Determinar cuántas tarjetas activas tiene un cliente según su ID.
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_cantidad_tarjetas;
+CREATE FUNCTION fn_cantidad_tarjetas(p_cliente_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE _cantidad_tarjetas INT DEFAULT 0;
+
+    SELECT COUNT(DISTINCT t.id) INTO _cantidad_tarjetas
+    FROM Clientes cl
+    INNER JOIN Cuentas cu ON cu.cliente_id = cl.id
+    INNER JOIN Tarjetas t ON t.cuenta_id = cu.id
+    WHERE cl.id = p_cliente_id;
+
+    RETURN _cantidad_tarjetas;
+END //
+
+DELIMITER ;
+
+SELECT fn_cantidad_tarjetas(1) AS Cantidad;
