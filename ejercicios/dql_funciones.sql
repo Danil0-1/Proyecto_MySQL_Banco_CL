@@ -225,3 +225,27 @@ END //
 DELIMITER ;
 
 SELECT fn_cantidad_tarjetas(1) AS Cantidad;
+
+-- Calcular el total de intereses historicos generados por una tarjeta específica.
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_interes_tarjeta;
+CREATE FUNCTION fn_interes_tarjeta(p_tarjeta_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _interes_historico DECIMAL(10,2);
+
+    SELECT SUM(it.monto_interes) INTO _interes_historico
+    FROM Tarjetas t
+    INNER JOIN Intereses_tarjetas it ON it.tarjeta_id = t.id
+    WHERE t.id = p_tarjeta_id;
+
+    RETURN IFNULL(_interes_historico, 0);
+
+END //
+
+DELIMITER ;
+
+SELECT fn_interes_tarjeta(2);
