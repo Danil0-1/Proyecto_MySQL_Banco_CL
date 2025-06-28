@@ -465,3 +465,27 @@ BEGIN
 END //
 
 DELIMITER ;
+
+SELECT fn_total_credito_pendiente_cliente(1) AS Total_pendiente;
+
+-- Calcular el saldo total de las tarjetas vencidas de un cliente
+
+DELIMITER //
+DROP FUNCTION IF EXISTS fn_saldo_tarjetas_vencidas;
+CREATE FUNCTION fn_saldo_tarjetas_vencidas(p_cliente_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _saldo_total DECIMAL(10,2);
+
+    SELECT SUM(t.saldo) INTO _saldo_total
+    FROM Tarjetas t
+    INNER JOIN Cuentas c ON t.cuenta_id = c.id
+    WHERE c.cliente_id = p_cliente_id AND t.estado = 'Vencida';
+
+    RETURN IFNULL(_saldo_total, 0);
+END //
+DELIMITER ;
+
+SELECT fn_saldo_tarjetas_vencidas(2);
+
