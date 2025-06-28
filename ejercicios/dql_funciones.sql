@@ -249,3 +249,29 @@ END //
 DELIMITER ;
 
 SELECT fn_interes_tarjeta(2);
+
+
+-- Calcular el total de dinero retirado por un cliente en un mes específico.
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_total_retiros_mes;
+CREATE FUNCTION fn_total_retiros_mes(p_cliente_id INT, p_mes INT, p_anio INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _total_retiros DECIMAL(10,2) DEFAULT 0;
+
+    SELECT IFNULL(SUM(m.monto), 0) INTO _total_retiros
+    FROM Movimientos m
+    INNER JOIN Cuentas c ON m.cuenta_id = c.id
+    INNER JOIN Tipo_movimiento_cuenta tmc ON m.tipo_movimiento = tmc.id
+    WHERE c.cliente_id = p_cliente_id AND tmc.nombre = 'Retiro' AND MONTH(m.fecha) = p_mes AND YEAR(m.fecha) = p_anio;
+
+    RETURN _total_retiros;
+END //
+
+DELIMITER ;
+
+SELECT fn_total_retiros_mes(1, 1, 2023);
+
