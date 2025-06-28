@@ -320,4 +320,29 @@ DELIMITER ;
 
 SELECT fn_limite_credito_disponible(2) AS Credito_disponible;
 
+--  Determinar cuántas cuotas de crédito ha pagado un cliente en total
+
+DELIMITER //
+DROP FUNCTION IF EXISTS fn_cuotas_pagadas;
+CREATE FUNCTION fn_cuotas_pagadas(p_cliente_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE _cuotas INT;
+
+    SELECT COUNT(*) INTO _cuotas
+    FROM Cuotas_credito cc
+    INNER JOIN Movimientos_tarjeta mt ON cc.movimiento_id = mt.id
+    INNER JOIN Tarjetas t ON mt.tarjeta_id = t.id
+    INNER JOIN Cuentas c ON t.cuenta_id = c.id
+    WHERE c.cliente_id = p_cliente_id AND cc.estado = 'Pagada';
+
+    RETURN _cuotas;
+END //
+DELIMITER ;
+
+SELECT fn_cuotas_pagadas(1) AS Cuotas_pagadas;
+
+
+
 
