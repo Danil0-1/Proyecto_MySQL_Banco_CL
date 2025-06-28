@@ -528,3 +528,61 @@ DELIMITER ;
 
 SELECT fn_resumen_cliente_general(1) AS Total_dinero;
 
+-- Calcular el promedio diario de movimientos en una cuenta en el último mes
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_promedio_diario_movimientos;
+CREATE FUNCTION fn_promedio_diario_movimientos(p_cuenta_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _total_movimientos INT DEFAULT 0;
+    DECLARE _dias INT DEFAULT 0;
+    DECLARE _promedio DECIMAL(10,2);
+
+    SELECT COUNT(*) INTO _total_movimientos
+    FROM Movimientos
+    WHERE cuenta_id = p_cuenta_id;
+
+    SELECT COUNT(fecha) INTO _dias
+    FROM Movimientos
+    WHERE cuenta_id = p_cuenta_id;
+
+    SET _promedio = _total_movimientos / _dias;
+    RETURN _promedio;
+END //
+
+DELIMITER ;
+
+SELECT fn_promedio_diario_movimientos(2);
+
+
+-- Calcular los dias desde el ultimo movimiento de una cuenta
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_cantidad_dias_sin_movimiento;
+CREATE FUNCTION fn_cantidad_dias_sin_movimiento(p_cuenta_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE _ult_fecha DATE;
+    DECLARE _dias INT;
+
+    SELECT MAX(fecha) INTO _ult_fecha
+    FROM Movimientos
+    WHERE cuenta_id = p_cuenta_id;
+
+    IF _ult_fecha IS NULL THEN
+        RETURN -1; -- Aca se coloca -1 para calcular si fecha > CURDATE significa que no ha pasado todavia
+    END IF;
+
+    SET _dias = DATEDIFF(CURDATE(), _ult_fecha);
+
+    RETURN _dias;
+END //
+
+DELIMITER ;
+
+SELECT fn_cantidad_dias_sin_movimiento(52);
