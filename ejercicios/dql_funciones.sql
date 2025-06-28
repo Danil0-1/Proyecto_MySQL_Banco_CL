@@ -343,6 +343,30 @@ DELIMITER ;
 
 SELECT fn_cuotas_pagadas(1) AS Cuotas_pagadas;
 
+-- Obtener la fecha de la última compra hechas con alguna tarjeta por un cliente
 
 
+DELIMITER //
+DROP FUNCTION IF EXISTS fn_fecha_ultima_compra;
+CREATE FUNCTION fn_fecha_ultima_compra(p_cliente_id INT)
+RETURNS DATE
+DETERMINISTIC
+BEGIN
+    DECLARE _fecha DATE;
 
+    SELECT MAX(mt.fecha) INTO _fecha
+    FROM Movimientos_tarjeta mt
+    INNER JOIN Tarjetas t ON mt.tarjeta_id = t.id
+    INNER JOIN Cuentas c ON t.cuenta_id = c.id
+    WHERE c.cliente_id = p_cliente_id AND mt.tipo_movimiento_tarjeta = 1;
+
+    IF _fecha IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El usuario no tiene compras';
+    END IF;
+
+    RETURN _fecha;
+END //
+DELIMITER ;
+
+SELECT fn_fecha_ultima_compra(4) AS Ultima_Compra;
