@@ -395,3 +395,32 @@ END //
 DELIMITER ;
 
 SELECT fn_promedio_interes_mensual(1) AS Promedio_tarjeta;
+
+
+-- Calcular cuánto dinero se ha descontado a un cliente en todas sus cuentas
+
+DELIMITER //
+DROP FUNCTION IF EXISTS fn_total_descuentos_aplicados;
+CREATE FUNCTION fn_total_descuentos_aplicados(p_cliente_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _descuento_total DECIMAL(10,2);
+
+    SELECT SUM(cm.monto_base * tt.descuento / 100) INTO _descuento_total
+    FROM Tarjetas t
+    INNER JOIN Tipo_tarjetas tt ON t.tipo_tarjeta_id = tt.id
+    INNER JOIN Cuentas c ON t.cuenta_id = c.id
+    INNER JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+    WHERE c.cliente_id = p_cliente_id;
+
+    IF _descuento_total IS NULL THEN
+        SET _descuento_total = 0;
+    END IF;
+
+    RETURN _descuento_total;
+END //
+DELIMITER ;
+
+SELECT fn_total_descuentos_aplicados(1) AS Total_con_descuentos;
+
