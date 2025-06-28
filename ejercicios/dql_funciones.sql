@@ -489,3 +489,42 @@ DELIMITER ;
 
 SELECT fn_saldo_tarjetas_vencidas(2);
 
+-- Obtener un resumen general del cliente, mostrando el total de sus movimientos
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_resumen_cliente_general;
+CREATE FUNCTION fn_resumen_cliente_general(p_cliente_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _cuentas DECIMAL(10,2) DEFAULT 0;
+    DECLARE _tarjetas DECIMAL(10,2) DEFAULT 0;
+    DECLARE _cuotas DECIMAL(10,2) DEFAULT 0;
+    DECLARE _total DECIMAL(10,2);
+
+    SELECT IFNULL(SUM(saldo), 0) INTO _cuentas
+    FROM Cuentas
+    WHERE cliente_id = p_cliente_id;
+
+    SELECT IFNULL(SUM(t.saldo), 0) INTO _tarjetas
+    FROM Tarjetas t
+    JOIN Cuentas cu ON cu.id = t.cuenta_id
+    WHERE cu.cliente_id = p_cliente_id;
+
+    SELECT IFNULL(SUM(cc.valor_cuota), 0) INTO _cuotas
+    FROM Cuotas_credito cc
+    JOIN Movimientos_tarjeta mt ON mt.id = cc.movimiento_id
+    JOIN Tarjetas t ON t.id = mt.tarjeta_id
+    JOIN Cuentas cu ON cu.id = t.cuenta_id
+    WHERE cu.cliente_id = p_cliente_id AND cc.estado = 'Pendiente';
+
+    SET _total = _cuentas + _tarjetas - _cuotas;
+
+    RETURN _total;
+END //
+
+DELIMITER ;
+
+SELECT fn_resumen_cliente_general(1) AS Total_dinero;
+
