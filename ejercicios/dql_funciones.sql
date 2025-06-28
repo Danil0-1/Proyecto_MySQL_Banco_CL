@@ -273,5 +273,51 @@ END //
 
 DELIMITER ;
 
-SELECT fn_total_retiros_mes(1, 1, 2023);
+SELECT fn_total_retiros_mes(1, 1, 2023) AS Total_retiros;
+
+
+-- Contar cuántas tarjetas de un cliente están actualmente en estado bloqueada.
+
+DELIMITER //
+
+DROP FUNCTION IF EXISTS fn_tarjetas_bloqueadas_cliente;
+CREATE FUNCTION fn_tarjetas_bloqueadas_cliente(p_cliente_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE _total_bloqueadas INT DEFAULT 0;
+
+    SELECT COUNT(t.id) INTO _total_bloqueadas
+    FROM Tarjetas t
+    INNER JOIN Cuentas c ON t.cuenta_id = c.id
+    WHERE c.cliente_id = p_cliente_id AND t.estado = 'Bloqueada';
+
+    RETURN _total_bloqueadas;
+END //
+
+DELIMITER ;
+
+SELECT fn_tarjetas_bloqueadas_cliente(7) AS Tarhetas_bloqueadas;
+
+-- Calcular cuánto crédito disponible tiene un cliente
+
+DELIMITER //
+DROP FUNCTION IF EXISTS fn_limite_credito_disponible;
+CREATE FUNCTION fn_limite_credito_disponible(p_cliente_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _disponible DECIMAL(10,2);
+
+    SELECT SUM(t.limite_credito - t.saldo ) INTO _disponible
+    FROM Tarjetas t
+    INNER JOIN Cuentas c ON t.cuenta_id = c.id
+    WHERE c.cliente_id = p_cliente_id AND t.categoria_tarjeta_id = 1;
+
+    RETURN _disponible;
+END //
+DELIMITER ;
+
+SELECT fn_limite_credito_disponible(2) AS Credito_disponible;
+
 
