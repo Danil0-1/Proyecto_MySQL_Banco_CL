@@ -370,3 +370,28 @@ END //
 DELIMITER ;
 
 SELECT fn_fecha_ultima_compra(4) AS Ultima_Compra;
+
+
+-- Calcular el promedio mensual de intereses generados por una tarjeta durante el último año
+
+DELIMITER //
+DROP FUNCTION IF EXISTS fn_promedio_interes_mensual;
+CREATE FUNCTION fn_promedio_interes_mensual(p_tarjeta_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE _promedio DECIMAL(10,2);
+
+    SELECT AVG(monto_interes) INTO _promedio
+    FROM Intereses_tarjetas
+    WHERE tarjeta_id = p_tarjeta_id AND fecha_generacion >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH);
+
+    IF _promedio IS NULL THEN
+        SET _promedio = 0;
+    END IF;
+
+    RETURN _promedio;
+END //
+DELIMITER ;
+
+SELECT fn_promedio_interes_mensual(1) AS Promedio_tarjeta;
