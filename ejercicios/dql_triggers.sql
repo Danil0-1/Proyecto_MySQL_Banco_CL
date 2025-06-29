@@ -410,3 +410,33 @@ INSERT INTO Clientes(
 SELECT *
 FROM Cuentas
 WHERE cliente_id = LAST_INSERT_ID();
+
+-- Al insertar una tarjeta, generar automáticamente su PIN
+
+DELIMITER //
+DROP TRIGGER IF EXISTS tr_generar_pin_tarjeta;
+CREATE TRIGGER tr_generar_pin_tarjeta
+AFTER INSERT ON Tarjetas
+FOR EACH ROW
+BEGIN
+    INSERT INTO Seguridad_tarjetas (tarjeta_id, pin)
+    VALUES (NEW.id, LPAD(FLOOR(RAND() * 10000), 4, '0'));
+END //
+DELIMITER ;
+
+INSERT INTO Tarjetas(
+    tipo_tarjeta_id,
+    categoria_tarjeta_id,
+    cuenta_id,
+    monto_apertura,
+    saldo,
+    estado,
+    numero_tarjeta,
+    fecha_expiracion
+) VALUES(
+    1, 1, 1, 100000, 10000000, 'Activa', '1263871647124748', DATE_ADD(CURDATE(), INTERVAL 3 YEAR)
+)
+
+SELECT * FROM Seguridad_tarjetas WHERE tarjeta_id = LAST_INSERT_ID();
+
+--
