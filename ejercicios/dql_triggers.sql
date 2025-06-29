@@ -587,3 +587,49 @@ INSERT INTO Pagos(
 ) VALUES (
     3, CURDATE(), 1.00, 'Efectivo', 'Completado'
 );
+
+-- Al registrar una tarjeta, validar que el cliente no tenga más de 3 tarjetas activas
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_limite_tarjetas_activas;
+CREATE TRIGGER tr_limite_tarjetas_activas
+BEFORE INSERT ON Tarjetas
+FOR EACH ROW
+BEGIN
+    DECLARE _cliente_id INT;
+    DECLARE _cantidad INT;
+
+    SELECT cliente_id INTO _cliente_id 
+    FROM Cuentas 
+    WHERE id = NEW.cuenta_id;
+
+    SELECT COUNT(*) INTO _cantidad
+    FROM Tarjetas t
+    JOIN Cuentas c ON t.cuenta_id = c.id
+    WHERE c.cliente_id = _cliente_id AND t.estado = 'Activa';
+
+    IF _cantidad >= 3 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El cliente ya tiene el número máximo de tarjetas activas (3).';
+    END IF;
+END //
+
+DELIMITER ;
+
+SELECT * FROM Cuentas;
+
+SELECT * FROM Tarjetas;
+
+INSERT INTO Tarjetas (
+    tipo_tarjeta_id, 
+    categoria_tarjeta_id, 
+    cuenta_id, 
+    monto_apertura, 
+    saldo,
+    estado, 
+    numero_tarjeta, 
+    fecha_expiracion, 
+    limite_credito
+) VALUES 
+(1, 1, 2, 500000, 500000, 'Activa', '1111111111111111', '2027-12-31', 1000000);
