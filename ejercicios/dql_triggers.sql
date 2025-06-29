@@ -242,6 +242,8 @@ INSERT INTO Pagos_tarjeta(
 -- Bloquear tarjeta automáticamente al registrar 7 retiros consecutivos por tarjeta en menos de 1 dia
 
 DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_bloquear_tarjeta_retiros_rapidos;
 CREATE TRIGGER tr_bloquear_tarjeta_retiros_rapidos
 AFTER INSERT ON Movimientos_tarjeta
 FOR EACH ROW
@@ -277,6 +279,7 @@ VALUES
 
 DELIMITER //
 
+DROP TRIGGER IF EXISTS tr_evitar_movimiento_tarjeta_inactiva;
 CREATE TRIGGER tr_evitar_movimiento_tarjeta_inactiva
 BEFORE INSERT ON Movimientos_tarjeta
 FOR EACH ROW
@@ -294,3 +297,49 @@ BEGIN
 END //
 
 DELIMITER ;
+
+-- Asignar una tarjeta automaticamente al crear una cuenta
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_tarjeta_inactiva_nueva_cuenta;
+CREATE TRIGGER tr_tarjeta_inactiva_nueva_cuenta
+AFTER INSERT ON Cuentas
+FOR EACH ROW
+BEGIN
+    IF NEW.saldo = 0 THEN
+        INSERT INTO Tarjetas (
+            tipo_tarjeta_id, 
+            categoria_tarjeta_id, 
+            cuenta_id,
+            monto_apertura, 
+            saldo, 
+            estado, 
+            numero_tarjeta,
+            fecha_expiracion
+        )
+        VALUES (
+            1, 
+            2, 
+            NEW.id, 
+            0, 
+            0, 
+            'Inactiva',
+            CONCAT('0000', NEW.id, FLOOR(RAND()*10000)),
+            CURDATE() + INTERVAL 3 YEAR
+        );
+    END IF;
+END //
+DELIMITER ;
+
+SELECT * 
+FROM Cuentas
+INNER JOIN Tarjetas ON Cuentas.id = Tarjetas.cuenta_id;
+
+INSERT INTO Cuentas(
+    tipo_cuenta_id,
+    cliente_id,
+    saldo,
+    fecha_creacion
+) VALUES
+(1, 1, 0.00, CURDATE())
