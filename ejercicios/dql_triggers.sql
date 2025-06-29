@@ -439,4 +439,38 @@ INSERT INTO Tarjetas(
 
 SELECT * FROM Seguridad_tarjetas WHERE tarjeta_id = LAST_INSERT_ID();
 
---
+-- Si el tipo de tarjeta es 'Joven', limitar el saldo máximo
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_limitar_saldo_joven;
+CREATE TRIGGER tr_limitar_saldo_joven
+BEFORE INSERT ON Tarjetas
+FOR EACH ROW
+BEGIN
+    DECLARE _tipo_nombre VARCHAR(20);
+
+    SELECT nombre INTO _tipo_nombre 
+    FROM Tipo_tarjetas 
+    WHERE id = NEW.tipo_tarjeta_id;
+    
+    IF _tipo_nombre = 'Joven' AND NEW.saldo > 500000 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Las tarjetas tipo Joven no pueden tener saldo mayor a 500000.';
+    END IF;
+END //
+DELIMITER ;
+
+
+INSERT INTO Tarjetas(
+    tipo_tarjeta_id,
+    categoria_tarjeta_id,
+    cuenta_id,
+    monto_apertura,
+    saldo,
+    estado,
+    numero_tarjeta,
+    fecha_expiracion
+) VALUES(
+    1, 1, 1, 100000, 10000000, 'Activa', '1263871647124748', DATE_ADD(CURDATE(), INTERVAL 3 YEAR)
+)
