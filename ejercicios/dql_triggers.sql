@@ -343,3 +343,40 @@ INSERT INTO Cuentas(
     fecha_creacion
 ) VALUES
 (1, 1, 0.00, CURDATE())
+
+-- Actualizar el historial de pagos al cambiar un pago
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_historial_estado_pago;
+CREATE TRIGGER tr_historial_estado_pago
+BEFORE UPDATE ON Pagos
+FOR EACH ROW
+BEGIN
+    IF OLD.estado <> NEW.estado THEN
+        INSERT INTO Historial_de_pagos (
+            pago_id,
+            fecha_cambio,
+            estado_anterior,
+            nuevo_estado
+        ) VALUES (
+            OLD.id,
+            CURDATE(),
+            OLD.estado,
+            NEW.estado
+        );
+    END IF;
+END //
+
+DELIMITER ;
+
+SELECT * 
+FROM Historial_de_pagos 
+WHERE pago_id = 4;
+
+
+UPDATE Pagos 
+SET estado = 'Completado' 
+WHERE id = 4;
+
+
