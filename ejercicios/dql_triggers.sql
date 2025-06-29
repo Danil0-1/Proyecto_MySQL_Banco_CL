@@ -86,3 +86,28 @@ SELECT * FROM Tarjetas t LEFT JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id;
 
 DELETE FROM Tarjetas WHERE id = 1;
 
+-- Al actualizar los descuentos, recalcular las cuotas de manejo de las tarjetas afectadas.
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_recalcular_cuotas_manejo_descuento;
+CREATE TRIGGER tr_recalcular_cuotas_manejo_descuento
+AFTER UPDATE ON Tipo_tarjetas
+FOR EACH ROW
+BEGIN
+
+    IF OLD.descuento <> NEW.descuento THEN
+        UPDATE Cuotas_de_manejo cm
+        JOIN Tarjetas t ON t.id = cm.tarjeta_id
+        SET cm.monto_total = t.monto_apertura - (t.monto_apertura * NEW.descuento / 100)
+        WHERE t.tipo_tarjeta_id = NEW.id;
+    END IF;
+END //
+
+DELIMITER ;
+
+UPDATE Tipo_tarjetas
+SET descuento = 3.0
+WHERE id = 1;
+
+SELECT * FROM Cuotas_de_manejo;
