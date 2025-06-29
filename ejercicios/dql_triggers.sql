@@ -633,3 +633,36 @@ INSERT INTO Tarjetas (
     limite_credito
 ) VALUES 
 (1, 1, 2, 500000, 500000, 'Activa', '1111111111111111', '2027-12-31', 1000000);
+
+
+-- Evitar que un cliente tenga mas de una cuenta del mismo tipo.
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_limitar_tipo_cuenta_por_cliente;
+CREATE TRIGGER tr_limitar_tipo_cuenta_por_cliente
+BEFORE INSERT ON Cuentas
+FOR EACH ROW
+BEGIN
+    DECLARE _cantidad INT;
+
+    SELECT COUNT(*) INTO _cantidad
+    FROM Cuentas
+    WHERE cliente_id = NEW.cliente_id AND tipo_cuenta_id = NEW.tipo_cuenta_id;
+
+    IF _cantidad > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El cliente ya tiene una cuenta de este tipo.';
+    END IF;
+END //
+
+DELIMITER ;
+
+
+INSERT INTO Cuentas (
+    tipo_cuenta_id,
+    cliente_id, 
+    saldo, 
+    fecha_creacion
+) VALUES 
+(1, 1, 1500000, CURDATE());
