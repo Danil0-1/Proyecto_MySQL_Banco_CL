@@ -196,3 +196,44 @@ INSERT INTO Movimientos_tarjeta(
     cuotas
 ) VALUES
 (2, 2, CURDATE(), 50000, 1);
+
+
+-- Actualizar estado de cuota de credito cuando se registre un pago
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_actualizar_estado_cuota_credito;
+CREATE TRIGGER tr_actualizar_estado_cuota_credito
+AFTER INSERT ON Pagos_tarjeta
+FOR EACH ROW
+BEGIN
+    DECLARE _monto_total_pago DECIMAL(10,2) DEFAULT 0.00;
+    DECLARE _valor_cuota DECIMAL(10,2) DEFAULT 0.00;
+
+    SELECT SUM(monto) INTO _monto_total_pago
+    FROM Pagos_tarjeta
+    WHERE cuota_credito_id = NEW.cuota_credito_id;
+
+    SELECT valor_cuota INTO _valor_cuota
+    FROM Cuotas_credito
+    WHERE id = NEW.cuota_credito_id;
+
+    IF _monto_total_pago >= _valor_cuota THEN
+        UPDATE Cuotas_credito
+        SET estado = 'Pagada'
+        WHERE id = NEW.cuota_credito_id;
+    END IF;
+
+END;
+//
+
+DELIMITER ;
+
+SELECT * FROM Cuotas_credito;
+
+INSERT INTO Pagos_tarjeta(
+    cuota_credito_id,
+    fecha_pago,
+    monto
+) VALUES 
+(9, CURDATE(),  30000);
