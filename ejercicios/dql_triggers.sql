@@ -237,3 +237,60 @@ INSERT INTO Pagos_tarjeta(
     monto
 ) VALUES 
 (9, CURDATE(),  30000);
+
+
+-- Bloquear tarjeta automáticamente al registrar 7 retiros consecutivos por tarjeta en menos de 1 dia
+
+DELIMITER //
+CREATE TRIGGER tr_bloquear_tarjeta_retiros_rapidos
+AFTER INSERT ON Movimientos_tarjeta
+FOR EACH ROW
+BEGIN
+    DECLARE _cantidad_movimiento INT;
+
+    SELECT COUNT(*) INTO _cantidad_movimiento
+    FROM Movimientos_tarjeta
+    WHERE tarjeta_id = NEW.tarjeta_id AND tipo_movimiento_tarjeta = 2 AND fecha >= NOW() - INTERVAL 1 DAY;
+
+    IF NEW.tipo_movimiento_tarjeta = 2 THEN
+        IF _cantidad_movimiento >= 7 THEN
+            UPDATE Tarjetas SET estado = 'Bloqueada'
+            WHERE id = NEW.tarjeta_id;
+        END IF;
+    END IF;
+END //
+DELIMITER ;
+
+SELECT * FROM Tarjetas WHERE id = 3;
+
+INSERT INTO Movimientos_tarjeta (tipo_movimiento_tarjeta, tarjeta_id, monto, cuotas)
+VALUES 
+(2, 3, 10, 1),
+(2, 3, 20, 1),
+(2, 3, 30, 1),
+(2, 3, 40, 1),
+(2, 3, 50, 1),
+(2, 3, 60, 1),
+(2, 3, 70, 1);
+
+-- Bloquear movimientos en tarjetas inactivas, bloqueadas o vencidas
+
+DELIMITER //
+
+CREATE TRIGGER tr_evitar_movimiento_tarjeta_inactiva
+BEFORE INSERT ON Movimientos_tarjeta
+FOR EACH ROW
+BEGIN
+    DECLARE _estado_tarjeta ENUM('Activa', 'Inactiva', 'Bloqueada', 'Vencida');
+
+    SELECT estado INTO _estado_tarjeta
+    FROM Tarjetas
+    WHERE id = NEW.tarjeta_id;
+
+    IF _estado_tarjeta <> 'Activa' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No se permiten movimientos en tarjetas que no estén activas.';
+    END IF;
+END //
+
+DELIMITER ;
