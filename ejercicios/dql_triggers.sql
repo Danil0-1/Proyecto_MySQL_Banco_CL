@@ -501,4 +501,27 @@ DELETE FROM Cuotas_de_manejo
 WHERE id = 5
 
 
+--  Si se crea un pago_tarjeta mayor al valor de la cuota, rechazarlo
 
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_rechazar_pago_excesivo;
+CREATE TRIGGER tr_rechazar_pago_excesivo
+BEFORE INSERT ON Pagos_tarjeta
+FOR EACH ROW
+BEGIN
+    DECLARE _valor DECIMAL(10,2);
+    SELECT valor_cuota INTO _valor FROM Cuotas_credito WHERE id = NEW.cuota_credito_id;
+
+    IF NEW.monto > _valor THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No se permite pagar más de lo que vale la cuota.';
+    END IF;
+END //
+DELIMITER ;
+
+
+INSERT INTO Pagos_tarjeta (cuota_credito_id, fecha_pago, monto)
+VALUES (7, CURDATE(), 120000); 
+
+SELECT * FROM Cuotas_credito;
