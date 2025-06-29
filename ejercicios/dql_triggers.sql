@@ -474,3 +474,31 @@ INSERT INTO Tarjetas(
 ) VALUES(
     1, 1, 1, 100000, 10000000, 'Activa', '1263871647124748', DATE_ADD(CURDATE(), INTERVAL 3 YEAR)
 )
+
+
+--  Si se elimina una cuota de manejo, eliminar pagos asociados
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_borrar_pagos_con_cuota;
+CREATE TRIGGER tr_borrar_pagos_con_cuota
+BEFORE DELETE ON Cuotas_de_manejo
+FOR EACH ROW
+BEGIN
+    DELETE FROM Pagos 
+    WHERE cuota_id = OLD.id;
+END //
+DELIMITER ;
+
+SELECT * 
+FROM Cuotas_de_manejo cm 
+INNER JOIN Pagos p ON cm.id = p.cuota_id
+WHERE cm.id = 5;
+
+SELECT * FROM Pagos WHERE cuota_id = 5;
+
+DELETE FROM Cuotas_de_manejo
+WHERE id = 5
+
+
+
