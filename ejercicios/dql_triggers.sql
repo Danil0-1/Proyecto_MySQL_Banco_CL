@@ -380,3 +380,33 @@ SET estado = 'Completado'
 WHERE id = 4;
 
 
+-- Registrar automáticamente una cuenta al insertar un cliente
+
+DELIMITER //
+CREATE TRIGGER tr_crear_cuenta_con_cliente
+AFTER INSERT ON Clientes
+FOR EACH ROW
+BEGIN
+    INSERT INTO Cuentas (
+        tipo_cuenta_id, 
+        cliente_id, 
+        saldo, 
+        fecha_creacion
+    )VALUES (
+        1, NEW.id, 0, CURDATE()
+        ); 
+END //
+DELIMITER ;
+
+INSERT INTO Clientes(
+    nombre,
+    documento,
+    correo,
+    fecha_registro,
+    telefono
+) VALUES
+('Prueba cuenta', '9847598174', 'pruebacuenta@gmail.com', CURDATE(), '+57 312475825');
+
+SELECT *
+FROM Cuentas
+WHERE cliente_id = LAST_INSERT_ID();
