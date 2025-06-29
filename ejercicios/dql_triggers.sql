@@ -552,3 +552,38 @@ DELIMITER ;
 INSERT INTO Pagos (cuota_id, fecha_pago, total_pago, metodo_pago, estado)
 VALUES (7, CURDATE(), 999999.99, 'Efectivo', 'Completado');
 
+
+-- Evitar registrar pagos en cuotas de manejo ya pagadas
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_evitar_pago_cuota_ya_pagada;
+CREATE TRIGGER tr_evitar_pago_cuota_ya_pagada
+BEFORE INSERT ON Pagos
+FOR EACH ROW
+BEGIN
+    DECLARE _estado ENUM('Pago', 'Pendiente');
+    SELECT estado INTO _estado 
+    FROM Cuotas_de_manejo 
+    WHERE id = NEW.cuota_id;
+
+    IF _estado = 'Pago' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Esta cuota de manejo ya está pagada.';
+    END IF;
+END //
+
+DELIMITER ;
+
+
+SELECT * FROM Cuotas_de_manejo;
+
+INSERT INTO Pagos(
+    cuota_id,
+    fecha_pago,
+    total_pago,
+    metodo_pago,
+    estado
+) VALUES (
+    3, CURDATE(), 1.00, 'Efectivo', 'Completado'
+);
