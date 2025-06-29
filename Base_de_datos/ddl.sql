@@ -123,7 +123,7 @@ CREATE TABLE Movimientos_tarjeta (
     monto DECIMAL(10,2) NOT NULL,
     cuotas INT NOT NULL DEFAULT 1,
     FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE,
-    FOREIGN KEY (tipo_movimiento_tarjeta) REFERENCES Tipo_movimiento_tarjeta(id)
+    FOREIGN KEY (tipo_movimiento_tarjeta) REFERENCES Tipo_movimiento_tarjeta(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Cuotas_credito (
@@ -143,7 +143,7 @@ CREATE TABLE Intereses_tarjetas (
     monto_base DECIMAL(10,2) NOT NULL,
     tasa DECIMAL(5,2) NOT NULL, 
     monto_interes DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id)
+    FOREIGN KEY (tarjeta_id) REFERENCES Tarjetas(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Pagos_tarjeta (
@@ -151,5 +151,5 @@ CREATE TABLE Pagos_tarjeta (
     cuota_credito_id INT NOT NULL,
     fecha_pago DATE NOT NULL DEFAULT (CURRENT_DATE),
     monto DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (cuota_credito_id) REFERENCES Cuotas_credito(id)
+    FOREIGN KEY (cuota_credito_id) REFERENCES Cuotas_credito(id) ON DELETE CASCADE
 );

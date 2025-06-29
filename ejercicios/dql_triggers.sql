@@ -66,3 +66,23 @@ SELECT * FROM Cuotas_de_manejo;
 UPDATE Tarjetas 
 SET monto_apertura = 200000
 WHERE id = 1;
+
+
+-- Al eliminar una tarjeta, eliminar todas las cuotas de manejo asociadas a esa tarjeta.
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_eliminar_cuotas_manejo;
+CREATE TRIGGER tr_eliminar_cuotas_manejo
+BEFORE DELETE ON Tarjetas
+FOR EACH ROW
+BEGIN
+    DELETE FROM Cuotas_de_manejo WHERE tarjeta_id = OLD.id;
+END //
+
+DELIMITER ;
+
+SELECT * FROM Tarjetas t LEFT JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id; 
+
+DELETE FROM Tarjetas WHERE id = 1;
+
