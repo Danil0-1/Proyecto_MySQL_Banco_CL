@@ -525,3 +525,30 @@ INSERT INTO Pagos_tarjeta (cuota_credito_id, fecha_pago, monto)
 VALUES (7, CURDATE(), 120000); 
 
 SELECT * FROM Cuotas_credito;
+
+--  Si se crea un pago mayor al valor de la cuota de manejo, rechazarlo
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_rechazar_pago_excesivo_manejo;
+CREATE TRIGGER tr_rechazar_pago_excesivo_manejo
+BEFORE INSERT ON Pagos
+FOR EACH ROW
+BEGIN
+    DECLARE _valor DECIMAL(10,2);
+
+    SELECT monto_total INTO _valor
+    FROM Cuotas_de_manejo
+    WHERE id = NEW.cuota_id;
+
+    IF NEW.total_pago > _valor THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No se permite pagar más de lo que vale la cuota de manejo.';
+    END IF;
+END //
+
+DELIMITER ;
+
+INSERT INTO Pagos (cuota_id, fecha_pago, total_pago, metodo_pago, estado)
+VALUES (7, CURDATE(), 999999.99, 'Efectivo', 'Completado');
+
