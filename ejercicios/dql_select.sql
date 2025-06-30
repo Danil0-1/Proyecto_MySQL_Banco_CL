@@ -520,3 +520,50 @@ FROM Movimientos m
 JOIN Cuentas c ON m.cuenta_id = c.id
 ORDER BY m.monto DESC
 LIMIT 5;
+
+-- Listar las tarjetas de crédito que no han tenido movimientos en los últimos 6 meses.
+
+SELECT t.id, t.numero_tarjeta
+FROM Tarjetas t
+JOIN Categoria_tarjetas cat ON t.categoria_tarjeta_id = cat.id
+LEFT JOIN Movimientos_tarjeta mt ON t.id = mt.tarjeta_id  AND mt.fecha >= CURDATE() - INTERVAL 6 MONTH
+WHERE cat.nombre = 'Credito' AND mt.id IS NULL;
+
+-- Mostrar el ranking de clientes según el total acumulado de cuotas de manejo pagadas.
+
+SELECT cl.id AS cliente_id, cl.nombre, SUM(p.total_pago) AS total_pagado
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+JOIN Pagos p ON cm.id = p.cuota_id
+WHERE p.estado = 'Completado'
+GROUP BY cl.id
+ORDER BY total_pagado DESC;
+
+-- Consultar el promedio de intereses generados por tipo de tarjeta.
+
+SELECT tt.nombre, AVG(it.monto_interes) AS promedio_interes
+FROM Intereses_tarjetas it
+JOIN Tarjetas t ON it.tarjeta_id = t.id
+JOIN Tipo_tarjetas tt ON t.tipo_tarjeta_id = tt.id
+GROUP BY tt.nombre;
+
+-- Obtener el total mensual de intereses cobrados por tipo de tarjeta en 2025.
+
+SELECT tt.nombre, MONTH(it.fecha_generacion) AS mes, SUM(it.monto_interes) AS total_intereses
+FROM Intereses_tarjetas it
+JOIN Tarjetas t ON it.tarjeta_id = t.id
+JOIN Tipo_tarjetas tt ON t.tipo_tarjeta_id = tt.id
+WHERE YEAR(it.fecha_generacion) = 2025
+GROUP BY tt.nombre, mes
+ORDER BY tt.nombre, mes;
+-- Listar las tarjetas que tienen cuotas vencidas y no han recibido ningún pago.
+
+SELECT t.id, t.numero_tarjeta
+FROM Tarjetas t
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+LEFT JOIN Pagos p ON cm.id = p.cuota_id
+WHERE cm.estado = 'Pendiente' AND cm.vencimiento_cuota < CURDATE() AND p.id IS NULL;
+
+
