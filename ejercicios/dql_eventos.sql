@@ -83,3 +83,21 @@ BEGIN
 END //
 
 DELIMITER ;
+
+-- Insertar seguridad por defecto en tarjetas sin PIN
+
+DELIMITER //
+
+DROP EVENT IF EXISTS ev_insertar_pin_defecto;
+CREATE EVENT IF NOT EXISTS ev_insertar_pin_defecto
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    INSERT INTO Seguridad_tarjetas (tarjeta_id, pin)
+    SELECT t.id, '1234'
+    FROM Tarjetas t
+    LEFT JOIN Seguridad_tarjetas s ON t.id = s.tarjeta_id
+    WHERE s.id IS NULL;
+END //
+
+DELIMITER ;
