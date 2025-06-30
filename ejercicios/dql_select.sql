@@ -558,6 +558,7 @@ JOIN Tipo_tarjetas tt ON t.tipo_tarjeta_id = tt.id
 WHERE YEAR(it.fecha_generacion) = 2025
 GROUP BY tt.nombre, mes
 ORDER BY tt.nombre, mes;
+
 -- Listar las tarjetas que tienen cuotas vencidas y no han recibido ningún pago.
 
 SELECT t.id, t.numero_tarjeta
@@ -566,4 +567,49 @@ JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
 LEFT JOIN Pagos p ON cm.id = p.cuota_id
 WHERE cm.estado = 'Pendiente' AND cm.vencimiento_cuota < CURDATE() AND p.id IS NULL;
 
+-- Mostrar el total de pagos realizados por cliente en cada trimestre de 2025.
+
+SELECT cl.id AS cliente_id, cl.nombre, QUARTER(p.fecha_pago) AS trimestre, SUM(p.total_pago) AS total_pagado
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+JOIN Pagos p ON cm.id = p.cuota_id
+WHERE YEAR(p.fecha_pago) = 2025
+GROUP BY cl.id, cl.nombre, trimestre;
+
+-- Obtener la tarjeta con más movimientos realizados.
+
+SELECT t.id, t.numero_tarjeta, COUNT(mt.id) AS total_movimientos
+FROM Tarjetas t
+JOIN Movimientos_tarjeta mt ON t.id = mt.tarjeta_id
+GROUP BY t.id, t.numero_tarjeta
+ORDER BY total_movimientos DESC
+LIMIT 1;
+
+-- Consultar la diferencia entre monto base y monto total en cuotas de manejo pagadas.
+
+SELECT cm.id, t.numero_tarjeta, (cm.monto_base - cm.monto_total) AS descuento_aplicado
+FROM Cuotas_de_manejo cm
+JOIN Tarjetas t ON cm.tarjeta_id = t.id
+WHERE cm.estado = 'Pago';
+
+-- Obtener el top 3 de clientes con más pagos rechazados.
+
+SELECT cl.id, cl.nombre, COUNT(*) AS pagos_rechazados
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+JOIN Pagos p ON cm.id = p.cuota_id
+WHERE p.estado = 'Rechazado'
+GROUP BY cl.id, cl.nombre
+ORDER BY pagos_rechazados DESC
+LIMIT 3;
+
+-- Mostrar cuántos pagos han pasado por cada estado en total.
+
+SELECT estado, COUNT(*) AS cantidad
+FROM Pagos
+GROUP BY estado;
 
