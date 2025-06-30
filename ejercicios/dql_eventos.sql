@@ -117,3 +117,18 @@ END //
 
 DELIMITER ;
 
+
+-- Eliminar todos los movimientos nulos
+
+DELIMITER //
+
+DROP EVENT IF EXISTS ev_eliminar_movimientos_nulos;
+CREATE EVENT IF NOT EXISTS ev_eliminar_movimientos_nulos
+ON SCHEDULE EVERY 1 WEEK
+DO
+BEGIN
+    DELETE FROM Movimientos
+    WHERE monto = 0;
+END //
+
+DELIMITER ;
