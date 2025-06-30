@@ -101,3 +101,19 @@ BEGIN
 END //
 
 DELIMITER ;
+
+-- Eliminar intereses con tasa 0
+
+DELIMITER //
+
+DROP EVENT IF EXISTS ev_eliminar_intereses_nulos;
+CREATE EVENT IF NOT EXISTS ev_eliminar_intereses_nulos
+ON SCHEDULE EVERY 1 WEEK
+DO
+BEGIN
+    DELETE FROM Intereses_tarjetas
+    WHERE tasa = 0;
+END //
+
+DELIMITER ;
+
