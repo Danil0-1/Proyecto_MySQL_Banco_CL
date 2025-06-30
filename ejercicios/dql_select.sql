@@ -53,6 +53,23 @@ FROM Pagos;
 SELECT *
 FROM Historial_de_pagos;
 
+--  Obtener la fecha de creacion de la cuenta de un usuario con su nombre
+
+SELECT cl.nombre, cu.fecha_creacion
+FROM Cuentas cu
+JOIN Clientes cl ON cu.cliente_id = cl.id;
+
+-- Obtener todas las tarjetas vencidas junto con su numero
+
+SELECT numero_tarjeta, fecha_expiracion
+FROM Tarjetas
+WHERE estado = 'Vencida';
+
+-- Obtener la lista de nombres y correos de los clientes que tienen al menos una cuenta registrada.
+
+SELECT DISTINCT cl.nombre, cl.correo
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id;
 
 -- Obtener el listado de todas las tarjetas de los clientes junto con su cuota de manejo.
 
@@ -688,3 +705,53 @@ JOIN Tipo_movimiento_tarjeta tm ON mt.tipo_movimiento_tarjeta = tm.id
 WHERE tm.nombre = 'Retiro' AND mt.fecha >= CURDATE() - INTERVAL 1 YEAR
 GROUP BY cl.id, cl.nombre;
 
+-- Mostrar tarjetas que no hayan realizado algun pago y aún estén activas.
+
+SELECT DISTINCT t.id, t.numero_tarjeta, t.estado
+FROM Tarjetas t
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+JOIN Pagos p ON cm.id = p.cuota_id
+WHERE p.estado = 'Pendiente' AND t.estado = 'Activa';
+
+-- Calcular el promedio de cuotas de manejo por cliente.
+
+SELECT cl.id, cl.nombre, ROUND(AVG(cm.monto_total), 2) AS promedio_cuotas
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+GROUP BY cl.id, cl.nombre;
+
+-- Mostrar el total de movimientos por cada tipo, ordenados de mayor a menor.
+
+SELECT tm.nombre AS tipo_movimiento, COUNT(mt.id) AS cantidad
+FROM Movimientos_tarjeta mt
+JOIN Tipo_movimiento_tarjeta tm ON mt.tipo_movimiento_tarjeta = tm.id
+GROUP BY tm.nombre
+ORDER BY cantidad DESC;
+
+-- Listar clientes con tarjetas vencidas pero sin cuotas pendientes.
+
+SELECT DISTINCT cl.id, cl.nombre
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+LEFT JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id AND cm.estado = 'Pendiente'
+WHERE t.estado = 'Vencida' AND cm.id IS NULL;
+
+-- Ver el detalle de pagos agrupados por método y estado.
+
+SELECT metodo_pago, estado, COUNT(*) AS cantidad, SUM(total_pago) AS total
+FROM Pagos
+GROUP BY metodo_pago, estado
+ORDER BY metodo_pago, estado;
+
+-- Promedio de pago por cuota agrupado por tipo de tarjeta.
+
+SELECT tt.nombre AS tipo_tarjeta, ROUND(AVG(p.total_pago), 2) AS promedio_pago
+FROM Tipo_tarjetas tt
+JOIN Tarjetas t ON tt.id = t.tipo_tarjeta_id
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+JOIN Pagos p ON cm.id = p.cuota_id
+WHERE p.estado = 'Completado'
+GROUP BY tt.nombre;
