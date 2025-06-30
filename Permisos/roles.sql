@@ -66,6 +66,35 @@ GRANT EXECUTE ON PROCEDURE banco_cl.ps_reporte_intereses_mensual TO 'consultor_t
 GRANT EXECUTE ON PROCEDURE banco_cl.ps_reporte_cuotas_mensual TO 'consultor_tarjetas'@'%';
 
 
+-- Funciones
+
+GRANT EXECUTE ON FUNCTION banco_cl.fn_saldo_pendiente TO 'operador_pagos'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_total_pagos_por_tipo TO 'operador_pagos'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_promedio_pagos_credito TO 'operador_pagos'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_cuotas_pagadas TO 'operador_pagos'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_total_credito_pendiente_cliente TO 'operador_pagos'@'%';
+
+GRANT EXECUTE ON FUNCTION banco_cl.fn_calcular_cuota_manejo TO 'gerente'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_total_pagos_por_tipo TO 'gerente'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_cantidad_tarjetas TO 'gerente'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_interes_tarjeta TO 'gerente'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_tarjetas_bloqueadas_cliente TO 'gerente'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_fecha_ultima_compra TO 'gerente'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_promedio_interes_mensual TO 'gerente'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_saldo_tarjetas_vencidas TO 'gerente'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_calcular_cuota_manejo TO 'gerente'@'%';
+
+
+GRANT EXECUTE ON FUNCTION banco_cl.fn_calcular_cuota_manejo TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_total_pagos_por_tipo TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_cantidad_tarjetas TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_interes_tarjeta TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_tarjetas_bloqueadas_cliente TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_fecha_ultima_compra TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_promedio_interes_mensual TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_saldo_tarjetas_vencidas TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON FUNCTION banco_cl.fn_calcular_cuota_manejo TO 'consultor_tarjetas'@'%';
+
 
 
 
