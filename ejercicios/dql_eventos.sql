@@ -68,3 +68,18 @@ BEGIN
 END //
 
 DELIMITER ;
+
+-- Eliminar historial de pagos con estado 'Inicio' mayor a 1 año
+
+DELIMITER //
+
+DROP EVENT IF EXISTS ev_limpiar_historial_inicial;
+CREATE EVENT IF NOT EXISTS ev_limpiar_historial_inicial
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    DELETE FROM Historial_de_pagos
+    WHERE estado_anterior = 'Inicio' AND fecha_cambio < CURDATE() - INTERVAL 1 YEAR;
+END //
+
+DELIMITER ;
