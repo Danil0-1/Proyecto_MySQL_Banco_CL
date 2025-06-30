@@ -43,3 +43,29 @@ SHOW GRANTS FOR 'operador_pagos'@'%';
 SHOW GRANTS FOR 'gerente'@'%';
 SHOW GRANTS FOR 'consultor_tarjetas'@'%';
 SHOW GRANTS FOR 'auditor'@'%';
+
+
+-- Procedimientos
+
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_procesar_pago TO 'operador_pagos'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_clientes_tarjetas_vencidas_sin_pago TO 'operador_pagos'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_aumentar_limite_credito TO 'operador_pagos'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_resumen_pagos_cliente TO 'operador_pagos'@'%';
+
+
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_reporte_cuotas_mensual TO 'gerente'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_bloquear_tarjetas_vencidas TO 'gerente'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_resumen_financiero_cliente TO 'gerente'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_clientes_tarjetas_vencidas_sin_pago TO 'gerente'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_reporte_intereses_mensual TO 'gerente'@'%';
+
+
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_resumen_financiero_cliente TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_clientes_tarjetas_vencidas_sin_pago TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_reporte_intereses_mensual TO 'consultor_tarjetas'@'%';
+GRANT EXECUTE ON PROCEDURE banco_cl.ps_reporte_cuotas_mensual TO 'consultor_tarjetas'@'%';
+
+
+
+
+
