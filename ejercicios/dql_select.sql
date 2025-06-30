@@ -613,3 +613,78 @@ SELECT estado, COUNT(*) AS cantidad
 FROM Pagos
 GROUP BY estado;
 
+-- Obtener el número total de cuotas pagadas vs pendientes por tipo de tarjeta.
+
+SELECT tt.nombre AS tipo_tarjeta, SUM(CASE WHEN cm.estado = 'Pago' THEN 1 ELSE 0 END) AS cuotas_pagadas,
+SUM(CASE WHEN cm.estado = 'Pendiente' THEN 1 ELSE 0 END) AS cuotas_pendientes
+FROM Tipo_tarjetas tt
+JOIN Tarjetas t ON tt.id = t.tipo_tarjeta_id
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+GROUP BY tt.nombre;
+
+-- Clientes que nunca han tenido una tarjeta de débito.
+
+SELECT c.id, c.nombre
+FROM Clientes c
+WHERE c.id NOT IN (
+    SELECT cu.cliente_id
+    FROM Cuentas cu
+    JOIN Tarjetas t ON cu.id = t.cuenta_id
+    JOIN Categoria_tarjetas ct ON t.categoria_tarjeta_id = ct.id
+    WHERE ct.nombre = 'Debito'
+);
+
+-- Mostrar el total de pagos por año y mes.
+
+SELECT YEAR(fecha_pago) AS anio, MONTH(fecha_pago) AS mes, SUM(total_pago) AS total
+FROM Pagos
+WHERE estado = 'Completado'
+GROUP BY anio, mes
+ORDER BY anio, mes;
+
+-- Obtener el top 5 de tarjetas con más interés acumulado.
+
+SELECT t.numero_tarjeta, SUM(it.monto_interes) AS total_interes
+FROM Tarjetas t
+JOIN Intereses_tarjetas it ON t.id = it.tarjeta_id
+GROUP BY t.id
+ORDER BY total_interes DESC
+LIMIT 5;
+
+-- Mostrar cuántas tarjetas activas tiene cada cliente.
+
+SELECT cl.id, cl.nombre, COUNT(t.id) AS tarjetas_activas
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+WHERE t.estado = 'Activa'
+GROUP BY cl.id, cl.nombre;
+
+-- Consultar la evolución del estado de cada pago.
+
+SELECT p.id AS pago_id, p.total_pago, hp.estado_anterior, hp.nuevo_estado, hp.fecha_cambio
+FROM Pagos p
+JOIN Historial_de_pagos hp ON p.id = hp.pago_id
+ORDER BY p.id, hp.fecha_cambio;
+
+-- Obtener la tarjeta con mayor número de cuotas de crédito asociadas.
+
+SELECT t.id, t.numero_tarjeta, COUNT(cc.id) AS total_cuotas
+FROM Tarjetas t
+JOIN Movimientos_tarjeta mt ON mt.tarjeta_id = t.id
+JOIN Cuotas_credito cc ON cc.movimiento_id = mt.id
+GROUP BY t.id, t.numero_tarjeta
+ORDER BY total_cuotas DESC
+LIMIT 1;
+
+-- Total de dinero retirado por clientes durante el último año.
+
+SELECT cl.id, cl.nombre, SUM(mt.monto) AS total_retirado
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Movimientos_tarjeta mt ON t.id = mt.tarjeta_id
+JOIN Tipo_movimiento_tarjeta tm ON mt.tipo_movimiento_tarjeta = tm.id
+WHERE tm.nombre = 'Retiro' AND mt.fecha >= CURDATE() - INTERVAL 1 YEAR
+GROUP BY cl.id, cl.nombre;
+
