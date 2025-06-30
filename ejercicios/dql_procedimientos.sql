@@ -430,7 +430,7 @@ BEGIN
           SELECT 1
           FROM Movimientos_tarjeta mt
           INNER JOIN Cuotas_credito cc ON cc.movimiento_id = mt.id
-          WHERE mt.tarjeta_id = t.id AND cc.estado != 'Pagada' AND cc.fecha_vencimiento >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+          WHERE mt.tarjeta_id = t.id AND cc.estado <> 'Pagada' AND cc.fecha_vencimiento >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
       );
 END //
 DELIMITER ;
