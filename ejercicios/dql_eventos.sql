@@ -35,3 +35,22 @@ BEGIN
 END //
 
 DELIMITER ;
+
+
+--  Cambiar automaticamente el estado de las cuotas de manejo si no se han pagado
+DELIMITER //
+
+DROP EVENT IF EXISTS ev_actualizar_estado_cuotas_manejo;
+CREATE EVENT IF NOT EXISTS ev_actualizar_estado_cuotas_manejo
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    UPDATE Cuotas_de_manejo
+    SET estado = 'Pendiente'
+    WHERE vencimiento_cuota < CURDATE() AND estado <> 'Pago';
+END //
+
+DELIMITER ;
+
+
+
