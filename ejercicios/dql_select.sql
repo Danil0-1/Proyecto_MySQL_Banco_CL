@@ -305,3 +305,91 @@ SELECT t.id, t.numero_tarjeta
 FROM Tarjetas t
 LEFT JOIN Seguridad_tarjetas st ON t.id = st.tarjeta_id
 WHERE st.id IS NULL;
+
+-- Mostrar la fecha del primer y último movimiento realizado por cada tarjeta.
+
+SELECT t.id AS tarjeta_id, MIN(mt.fecha) AS primer_movimiento, MAX(mt.fecha) AS ultimo_movimiento
+FROM Tarjetas t
+JOIN Movimientos_tarjeta mt ON t.id = mt.tarjeta_id
+GROUP BY t.id;
+
+-- Obtener el total de intereses generados por cliente durante el año actual.
+
+SELECT cl.id AS cliente_id, cl.nombre, SUM(it.monto_interes) AS total_intereses
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Intereses_tarjetas it ON t.id = it.tarjeta_id
+WHERE YEAR(it.fecha_generacion) = YEAR(CURDATE())
+GROUP BY cl.id, cl.nombre;
+
+-- Listar los pagos rechazados junto con la fecha en que cambiaron de estado.
+
+SELECT p.id AS pago_id, p.fecha_pago, hp.fecha_cambio, hp.estado_anterior, hp.nuevo_estado
+FROM Pagos p
+JOIN Historial_de_pagos hp ON p.id = hp.pago_id
+WHERE p.estado = 'Rechazado';
+
+-- Mostrar las tarjetas con más de una cuota de manejo pendiente.
+
+SELECT t.id, t.numero_tarjeta, COUNT(cm.id) AS cuotas_pendientes
+FROM Tarjetas t
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+WHERE cm.estado = 'Pendiente'
+GROUP BY t.id
+HAVING COUNT(cm.id) > 1;
+
+-- Obtener la relación entre las tarjetas activas y bloqueadas por cliente.
+
+SELECT cl.id AS cliente_id, cl.nombre,
+SUM(CASE WHEN t.estado = 'Activa' THEN 1 ELSE 0 END) AS activas,
+SUM(CASE WHEN t.estado = 'Bloqueada' THEN 1 ELSE 0 END) AS bloqueadas
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+GROUP BY cl.id;
+
+-- Mostrar la cantidad de cuotas de crédito pagadas vs pendientes por cada tarjeta.
+
+SELECT t.id AS tarjeta_id,
+SUM(CASE WHEN cc.estado = 'Pagada' THEN 1 ELSE 0 END) AS cuotas_pagadas,
+SUM(CASE WHEN cc.estado = 'Pendiente' THEN 1 ELSE 0 END) AS cuotas_pendientes
+FROM Tarjetas t
+JOIN Movimientos_tarjeta mt ON t.id = mt.tarjeta_id
+JOIN Cuotas_credito cc ON mt.id = cc.movimiento_id
+GROUP BY t.id;
+
+-- Listar todos los clientes que no han generado ningún pago.
+
+SELECT cl.id, cl.nombre
+FROM Clientes cl
+LEFT JOIN Cuentas cu ON cl.id = cu.cliente_id
+LEFT JOIN Tarjetas t ON cu.id = t.cuenta_id
+LEFT JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+LEFT JOIN Pagos p ON cm.id = p.cuota_id
+WHERE p.id IS NULL;
+
+-- Mostrar cuántos pagos ha hecho cada cliente por cada método de pago.
+
+SELECT cl.id AS cliente_id, cl.nombre, p.metodo_pago, COUNT(p.id) AS cantidad_pagos
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+JOIN Pagos p ON cm.id = p.cuota_id
+GROUP BY cl.id, cl.nombre, p.metodo_pago;
+
+-- Obtener la tarjeta con más movimientos registrados.
+
+SELECT t.id, t.numero_tarjeta, COUNT(mt.id) AS total_movimientos
+FROM Tarjetas t
+JOIN Movimientos_tarjeta mt ON t.id = mt.tarjeta_id
+GROUP BY t.id
+ORDER BY total_movimientos DESC
+LIMIT 1;
+
+-- Listar todas las tarjetas cuyo límite de crédito supera los $2'000.000.
+
+SELECT id, numero_tarjeta, limite_credito
+FROM Tarjetas
+WHERE limite_credito IS NOT NULL AND limite_credito > 2000000;
