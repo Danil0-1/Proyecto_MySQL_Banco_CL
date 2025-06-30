@@ -229,3 +229,79 @@ JOIN Movimientos_tarjeta mt ON mt.tarjeta_id = t.id
 JOIN Tipo_movimiento_tarjeta tm ON mt.tipo_movimiento_tarjeta = tm.id;
 
 
+--Listar el número total de cuotas de manejo por cada tarjeta.
+
+SELECT tarjeta_id, COUNT(*) AS total_cuotas
+FROM Cuotas_de_manejo
+GROUP BY tarjeta_id;
+
+--Obtener los datos de contacto de los clientes que tengan al menos una tarjeta activa.
+
+
+SELECT DISTINCT cl.id, cl.nombre, cl.correo, cl.telefono
+FROM Clientes cl
+JOIN Cuentas cu ON cu.cliente_id = cl.id
+JOIN Tarjetas t ON t.cuenta_id = cu.id
+WHERE t.estado = 'Activa';
+
+-- Listar los intereses generados por tarjeta durante el último mes.
+
+SELECT tarjeta_id, fecha_generacion, monto_interes
+FROM Intereses_tarjetas
+WHERE fecha_generacion >= CURDATE() - INTERVAL 1 MONTH;
+
+
+-- Obtener la cantidad de pagos por cada estado (Completado, Rechazado, etc.).
+
+SELECT estado, COUNT(*) AS cantidad
+FROM Pagos
+GROUP BY estado;
+
+
+-- Mostrar el total de dinero pagado por cuotas de crédito por cada tarjeta.
+
+SELECT t.id AS tarjeta_id, SUM(pt.monto) AS total_pagado_credito
+FROM Pagos_tarjeta pt
+JOIN Cuotas_credito cc ON pt.cuota_credito_id = cc.id
+JOIN Movimientos_tarjeta mt ON cc.movimiento_id = mt.id
+JOIN Tarjetas t ON mt.tarjeta_id = t.id
+GROUP BY t.id;
+
+
+-- Listar las tarjetas vencidas junto con su titular.
+
+SELECT t.numero_tarjeta, t.fecha_expiracion, cl.nombre AS titular
+FROM Tarjetas t
+JOIN Cuentas cu ON t.cuenta_id = cu.id
+JOIN Clientes cl ON cu.cliente_id = cl.id
+WHERE t.estado = 'Vencida';
+
+-- Obtener las cuotas de crédito que no han sido pagadas todavía.
+
+SELECT cc.id, cc.numero_cuota, cc.fecha_vencimiento, cc.valor_cuota
+FROM Cuotas_credito cc
+LEFT JOIN Pagos_tarjeta pt ON pt.cuota_credito_id = cc.id
+WHERE pt.id IS NULL OR cc.estado = 'Pendiente';
+
+-- Mostrar cuántas tarjetas tiene cada cliente por categoría (Crédito o Débito).
+
+SELECT cl.id AS cliente_id, cl.nombre, ct.nombre AS categoria, COUNT(t.id) AS total_tarjetas
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Categoria_tarjetas ct ON t.categoria_tarjeta_id = ct.id
+GROUP BY cl.id, cl.nombre, ct.nombre;
+
+-- Listar todos los pagos de cuotas de manejo realizados en efectivo.
+
+SELECT p.id, p.total_pago, p.fecha_pago, p.metodo_pago
+FROM Pagos p
+WHERE p.metodo_pago = 'Efectivo' AND p.estado = 'Completado';
+
+
+-- Obtener las tarjetas que no tienen PIN registrado aún.
+
+SELECT t.id, t.numero_tarjeta
+FROM Tarjetas t
+LEFT JOIN Seguridad_tarjetas st ON t.id = st.tarjeta_id
+WHERE st.id IS NULL;
