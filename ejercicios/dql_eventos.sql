@@ -8,13 +8,30 @@ SET GLOBAL event_scheduler = ON;
 
 DELIMITER //
 
+DROP EVENT IF EXISTS ev_actualizar_tarjetas_vencidas;
 CREATE EVENT IF NOT EXISTS ev_actualizar_tarjetas_vencidas
 ON SCHEDULE EVERY 1 DAY
 DO
 BEGIN
     UPDATE Tarjetas
     SET estado = 'Vencida'
-    WHERE fecha_expiracion < CURDATE() AND estado != 'Vencida';
+    WHERE fecha_expiracion < CURDATE() AND estado <> 'Vencida';
+END //
+
+DELIMITER ;
+
+
+-- Eliminar pagos cancelados antiguos
+
+DELIMITER //
+
+DROP EVENT IF EXISTS ev_eliminar_pagos_rechazados;
+CREATE EVENT IF NOT EXISTS ev_eliminar_pagos_rechazados
+ON SCHEDULE EVERY 1 MONTH
+DO
+BEGIN
+    DELETE FROM Pagos
+    WHERE estado = 'Rechazado' AND fecha_pago < CURDATE() - INTERVAL 6 MONTH;
 END //
 
 DELIMITER ;
