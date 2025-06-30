@@ -393,3 +393,72 @@ LIMIT 1;
 SELECT id, numero_tarjeta, limite_credito
 FROM Tarjetas
 WHERE limite_credito IS NOT NULL AND limite_credito > 2000000;
+
+-- Mostrar los clientes que tienen más de una cuenta registrada.
+
+SELECT c.id, c.nombre, COUNT(cu.id) AS total_cuentas
+FROM Clientes c
+JOIN Cuentas cu ON c.id = cu.cliente_id
+GROUP BY c.id
+HAVING COUNT(cu.id) > 1;
+
+-- Obtener los movimientos de cuenta cuyo nuevo saldo quedó por debajo de $50.000.
+
+SELECT m.id, m.fecha, m.monto, m.nuevo_saldo, c.id AS cuenta_id
+FROM Movimientos m
+JOIN Cuentas c ON m.cuenta_id = c.id
+WHERE m.nuevo_saldo < 50000;
+
+-- Listar los tipos de tarjetas y la cantidad de tarjetas asociadas a cada tipo.
+
+SELECT tt.id, tt.nombre, COUNT(t.id) AS total_tarjetas
+FROM Tipo_tarjetas tt
+LEFT JOIN Tarjetas t ON tt.id = t.tipo_tarjeta_id
+GROUP BY tt.id, tt.nombre;
+
+-- Mostrar cuántos intereses se han generado por cada tarjeta.
+
+SELECT tarjeta_id, COUNT(id) AS total_registros_interes, SUM(monto_interes) AS total_interes
+FROM Intereses_tarjetas
+GROUP BY tarjeta_id;
+
+-- Obtener el nombre del cliente y la fecha de creación de su cuenta más reciente.
+
+SELECT cl.id AS cliente_id, cl.nombre, MAX(cu.fecha_creacion) AS ultima_cuenta
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+GROUP BY cl.id, cl.nombre;
+
+-- Mostrar los pagos realizados con métodos que contengan la palabra "Transferencia".
+
+SELECT id, fecha_pago, total_pago, metodo_pago
+FROM Pagos
+WHERE metodo_pago LIKE '%Transferencia%';
+
+-- Obtener todas las tarjetas cuyo estado ha sido “Vencida” y su fecha de expiración ya pasó.
+
+SELECT id, numero_tarjeta, fecha_expiracion, estado
+FROM Tarjetas
+WHERE estado = 'Vencida' AND fecha_expiracion < CURDATE();
+
+-- Mostrar cuántas cuotas de manejo tiene cada tarjeta, ordenadas por cantidad.
+
+SELECT tarjeta_id, COUNT(id) AS total_cuotas
+FROM Cuotas_de_manejo
+GROUP BY tarjeta_id
+ORDER BY total_cuotas DESC;
+
+-- Listar los pagos con monto mayor al valor base de la cuota (posible error o sobrepago).
+
+SELECT p.id, p.total_pago, cm.monto_base, cm.monto_total
+FROM Pagos p
+JOIN Cuotas_de_manejo cm ON p.cuota_id = cm.id
+WHERE p.total_pago > cm.monto_base;
+
+-- Obtener un listado de clientes sin ninguna tarjeta registrada.
+
+SELECT cl.id, cl.nombre
+FROM Clientes cl
+LEFT JOIN Cuentas cu ON cl.id = cu.cliente_id
+LEFT JOIN Tarjetas t ON cu.id = t.cuenta_id
+WHERE t.id IS NULL;
