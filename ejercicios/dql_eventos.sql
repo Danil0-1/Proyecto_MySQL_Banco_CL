@@ -53,4 +53,18 @@ END //
 DELIMITER ;
 
 
+-- Cambiar estado a 'Bloqueada' si la tarjeta tiene saldo negativo
 
+DELIMITER //
+
+DROP EVENT IF EXISTS ev_bloquear_tarjetas_saldo_negativo;
+CREATE EVENT IF NOT EXISTS ev_bloquear_tarjetas_saldo_negativo
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    UPDATE Tarjetas
+    SET estado = 'Bloqueada'
+    WHERE saldo < 0 AND estado = 'Activa';
+END //
+
+DELIMITER ;
