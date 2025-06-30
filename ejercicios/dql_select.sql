@@ -462,3 +462,61 @@ FROM Clientes cl
 LEFT JOIN Cuentas cu ON cl.id = cu.cliente_id
 LEFT JOIN Tarjetas t ON cu.id = t.cuenta_id
 WHERE t.id IS NULL;
+
+-- Obtener los clientes cuya suma total de pagos (de cuotas de manejo) sea menor al total que deberían haber pagado según las cuotas registradas.
+
+SELECT cl.id, cl.nombre, SUM(p.total_pago) AS total_pagado, SUM(cm.monto_total) AS total_debido
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+LEFT JOIN Pagos p ON cm.id = p.cuota_id AND p.estado = 'Completado'
+GROUP BY cl.id, cl.nombre
+HAVING total_pagado < total_debido;
+
+-- Mostrar el promedio de valor de cuota por cliente en tarjetas de crédito únicamente.
+
+SELECT cl.id, cl.nombre, AVG(cc.valor_cuota) AS promedio_valor_cuota
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Categoria_tarjetas cat ON t.categoria_tarjeta_id = cat.id
+JOIN Movimientos_tarjeta mt ON t.id = mt.tarjeta_id
+JOIN Cuotas_credito cc ON mt.id = cc.movimiento_id
+WHERE cat.nombre = 'Credito'
+GROUP BY cl.id, cl.nombre;
+
+-- Obtener el número total de tarjetas activas, bloqueadas, vencidas e inactivas agrupadas por tipo de tarjeta.
+
+SELECT tt.nombre AS tipo_tarjeta, SUM(t.estado = 'Activa') AS activas, SUM(t.estado = 'Bloqueada') AS bloqueadas,
+SUM(t.estado = 'Vencida') AS vencidas, SUM(t.estado = 'Inactiva') AS inactivas
+FROM Tipo_tarjetas tt
+JOIN Tarjetas t ON tt.id = t.tipo_tarjeta_id
+GROUP BY tt.nombre;
+
+-- Reporte de cuotas de manejo: Total mensual por cliente y estado de la cuota.
+
+SELECT cl.id, cl.nombre, MONTH(cm.vencimiento_cuota) AS mes, cm.estado, SUM(cm.monto_total) AS total_mes
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Cuotas_de_manejo cm ON t.id = cm.tarjeta_id
+GROUP BY cl.id, cl.nombre, mes, cm.estado
+ORDER BY cl.id, mes;
+
+-- Obtener el valor acumulado de intereses por cliente.
+
+SELECT cl.id AS cliente_id, cl.nombre, SUM(it.monto_interes) AS total_interes
+FROM Clientes cl
+JOIN Cuentas cu ON cl.id = cu.cliente_id
+JOIN Tarjetas t ON cu.id = t.cuenta_id
+JOIN Intereses_tarjetas it ON t.id = it.tarjeta_id
+GROUP BY cl.id, cl.nombre;
+
+-- Obtener los 5 movimientos de cuenta más altos por monto.
+
+SELECT m.*, c.cliente_id
+FROM Movimientos m
+JOIN Cuentas c ON m.cuenta_id = c.id
+ORDER BY m.monto DESC
+LIMIT 5;
